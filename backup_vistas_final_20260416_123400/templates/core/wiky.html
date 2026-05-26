@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title_page %}Wiky Operativa{% endblock %}
+{% block breadcrumb %}Directorio Automático{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-10 rounded-[3rem] border shadow-sm">
+    <div class="mb-10 pb-4 border-b">
+        <h2 class="text-3xl font-black text-gray-800">Wiky Operativa</h2>
+        <p class="text-xs text-gray-400 uppercase font-bold tracking-widest mt-1">Estructura de flujos por área y proceso</p>
+    </div>
+    {% for area in areas %}
+    <div class="mb-8 border-l-4 border-secondary pl-6">
+        <h3 class="font-bold text-gray-800 uppercase tracking-tighter">{{ area.nombre }}</h3>
+        <div class="mt-4 space-y-2">
+            {% for proceso in area.procesos.all %}
+            <p class="text-sm font-medium text-gray-500 hover:text-secondaryHover cursor-pointer">/ {{ proceso.nombre }}</p>
+            {% empty %}
+            <p class="text-xs text-gray-400 italic">No hay procesos en esta área.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-400 text-center py-10">No hay áreas registradas.</p>
+    {% endfor %}
+</div>
+{% endblock %}

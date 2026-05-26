@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'planificacion_dashboard' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

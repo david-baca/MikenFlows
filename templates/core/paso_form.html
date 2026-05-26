@@ -1,0 +1,101 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('id_tipo');
+        if (tipoSelect) {
+            tipoSelect.addEventListener('change', toggleCondSection);
+            toggleCondSection();
+        }
+    });
+    function toggleCondSection() {
+        const tipo = document.getElementById('id_tipo').value;
+        const condSection = document.getElementById('cond-section');
+        if (condSection) {
+            condSection.classList.toggle('hidden', tipo !== 'condicional');
+        }
+    }
+</script>
+{% endblock %}
+
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-10 rounded-[2.5rem] border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.media }}
+        
+        <!-- Mostrar errores generales del formulario -->
+        {% if form.non_field_errors %}
+        <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-xl">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="col-span-2">
+                <label class="text-[10px] font-bold text-gray-400 uppercase">Nombre del Paso *</label>
+                {{ form.nombre }}
+                {{ form.nombre.errors }}
+            </div>
+            <div>
+                {{ form.puntos.label_tag }} {{ form.puntos }}
+                {{ form.puntos.errors }}
+            </div>
+            <div>
+                {{ form.orden.label_tag }} {{ form.orden }}
+                {{ form.orden.errors }}
+            </div>
+            <div>
+                {{ form.tipo.label_tag }} {{ form.tipo }}
+                {{ form.tipo.errors }}
+            </div>
+            <div>
+                {{ form.nivel_critico.label_tag }} {{ form.nivel_critico }}
+                {{ form.nivel_critico.errors }}
+            </div>
+            <div>
+                {{ form.evidencia_tipo.label_tag }} {{ form.evidencia_tipo }}
+                {{ form.evidencia_tipo.errors }}
+            </div>
+        </div>
+
+        <div>
+            {{ form.descripcion.label_tag }} {{ form.descripcion }}
+            {{ form.descripcion.errors }}
+        </div>
+
+        <div id="cond-section" class="hidden bg-softGray p-6 rounded-3xl border-2 border-dashed border-gray-200 my-6">
+            <p class="text-[10px] font-black text-secondaryHover mb-4 uppercase">Lógica de Decisión</p>
+            <div class="space-y-4">
+                <div>
+                    {{ form.pregunta_condicion.label_tag }} {{ form.pregunta_condicion }}
+                    {{ form.pregunta_condicion.errors }}
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        {{ form.paso_si.label_tag }} {{ form.paso_si }}
+                        {{ form.paso_si.errors }}
+                    </div>
+                    <div>
+                        {{ form.paso_no.label_tag }} {{ form.paso_no }}
+                        {{ form.paso_no.errors }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="my-8">
+            {{ form.ayuda_html.label_tag }} {{ form.ayuda_html }}
+            {{ form.ayuda_html.errors }}
+        </div>
+
+        <div class="flex justify-end gap-3 pt-6 border-t">
+            <a href="{% url 'proceso_visualizar' proceso.pk %}" class="px-8 py-3 font-bold text-gray-400">Cancelar</a>
+            <button type="submit" class="bg-black text-white px-10 py-3 rounded-2xl font-bold shadow-xl">Guardar Paso</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

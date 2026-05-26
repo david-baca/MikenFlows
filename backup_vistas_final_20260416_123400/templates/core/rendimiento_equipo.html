@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title_page %}Rendimiento del Equipo{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b"><h3 class="font-bold">Procesos de personas a tu cargo</h3></div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <input type="date" name="fecha" class="border rounded p-2" value="{{ filtros.fecha }}">
+            <select name="estado" class="border rounded p-2"><option value="">Estado</option><option value="en_progreso">En progreso</option><option value="completado">Completado</option><option value="supervisado">Supervisado</option></select>
+            <select name="usuario" class="border rounded p-2"><option value="">Usuario</option>{% for u in usuarios %}<option value="{{ u.id }}" {% if filtros.usuario == u.id|stringformat:'s' %}selected{% endif %}>{{ u.user.get_full_name }}</option>{% endfor %}</select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <table class="w-full text-left text-sm">
+        <thead><tr class="bg-softGray border-b"><th>Usuario</th><th>Proceso</th><th>Estado</th><th>Cumplimiento</th><th>Última actualización</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for ejec in ejecuciones %}
+            <tr><td class="p-4">{{ ejec.usuario.user.get_full_name }}</td><td class="p-4">{{ ejec.proceso.nombre }}</td><td class="p-4">{{ ejec.get_estado_display }}</td><td class="p-4">{{ ejec.calcular_cumplimiento }}%</td><td class="p-4">{{ ejec.fecha_inicio|date:"d/m/Y H:i" }}</td><td class="p-4"><div class="flex gap-2"><a href="{% url 'detalle_rendimiento_equipo' ejec.pk %}" class="bg-secondary px-3 py-1 rounded text-xs">Ver detalle</a> <a href="{% url 'supervision_detalle' ejec.pk %}" class="bg-purple-500 text-white px-3 py-1 rounded text-xs hover:bg-purple-600">Supervisar</a></div></td></tr>
+            {% empty %}<tr><td colspan="6" class="p-4 text-center">Sin ejecuciones</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% include 'pagination.html' with page=ejecuciones %}
+</div>
+{% endblock %}

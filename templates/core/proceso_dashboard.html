@@ -1,0 +1,40 @@
+{% extends 'base.html' %}
+{% block title_page %}Procesos del Sistema{% endblock %}
+{% block breadcrumb %}Administración de Procesos{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Procesos registrados</h3>
+        <a href="{% url 'proceso_crear' %}" class="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold">+ Crear Proceso</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="bg-softGray border-b text-[10px] uppercase font-bold text-gray-400">
+                    <th class="p-4">Proceso</th>
+                    <th class="p-4">Área</th>
+                    <th class="p-4">Nivel crítico</th>
+                    <th class="p-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for p in procesos %}
+                <tr>
+                    <td class="p-4 font-bold">{{ p.nombre }}</td>
+                    <td class="p-4">{{ p.area.nombre }}</td>
+                    <td class="p-4">{{ p.get_nivel_critico_display }}</td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'proceso_visualizar' p.pk %}" class="bg-secondary px-3 py-1 rounded text-[10px] font-bold uppercase mr-2 shadow-sm">Ver Pasos</a>
+                        <a href="{% url 'proceso_editar' p.pk %}" class="text-gray-300 hover:text-black p-2"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'proceso_eliminar' p.pk %}" class="text-red-300 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="p-4 text-center text-gray-400">No hay procesos registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=procesos %}
+</div>
+{% endblock %}

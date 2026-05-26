@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title_page %}Detalle de mi proceso{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm">
+    <h2 class="text-2xl font-bold">{{ ejecucion.proceso.nombre }}</h2>
+    <p>Estado: {{ ejecucion.get_estado_display }} | Cumplimiento: {{ ejecucion.calcular_cumplimiento }}%</p>
+    <p>Comentario general: {{ ejecucion.comentario_general|default:"Sin comentarios" }}</p>
+    <hr class="my-4">
+    <h3 class="font-bold">Pasos</h3>
+    <table class="w-full mt-2"><thead><tr><th>Paso</th><th>Puntaje</th><th>Evidencia</th><th>Comentario supervisión</th></tr></thead>
+    <tbody>{% for p in pasos %}<tr><td>{{ p.paso.nombre }}</td><td>{{ p.puntaje_ajustado|default:p.puntaje_original }}</td><td>{% if p.evidencia_fotografica %}📷 {% endif %}{% if p.evidencia_descriptiva %}📝 {% endif %}</td><td>{{ p.comentario_supervision|default:"—" }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="mt-4"><a href="{% url 'rendimiento_procesos' %}" class="text-gray-400">← Regresar</a></div>
+</div>
+{% endblock %}

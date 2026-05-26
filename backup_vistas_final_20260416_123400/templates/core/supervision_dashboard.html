@@ -1,0 +1,82 @@
+{% extends 'base.html' %}
+{% block title_page %}Supervisión Pendiente{% endblock %}
+{% block breadcrumb %}Procesos a revisar{% endblock %}
+
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b bg-gray-50 flex justify-between items-center">
+        <h3 class="font-bold">Procesos pendientes de supervisión</h3>
+        <span class="text-xs text-gray-400">Solo procesos de usuarios a tu cargo</span>
+    </div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <select name="usuario" class="border rounded p-2">
+                <option value="">Todos los usuarios</option>
+                {% for u in usuarios %}
+                <option value="{{ u.id }}" {% if filtros.usuario == u.id|stringformat:'s' %}selected{% endif %}>{{ u.user.get_full_name }}</option>
+                {% endfor %}
+            </select>
+            <select name="proceso" class="border rounded p-2">
+                <option value="">Todos los procesos</option>
+                {% for p in procesos %}
+                <option value="{{ p.id }}" {% if filtros.proceso == p.id|stringformat:'s' %}selected{% endif %}>{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+            <select name="estado_sup" class="border rounded p-2">
+                <option value="">Estado supervisión</option>
+                <option value="pendiente" {% if filtros.estado_sup == 'pendiente' %}selected{% endif %}>Pendiente</option>
+                <option value="en_revision" {% if filtros.estado_sup == 'en_revision' %}selected{% endif %}>En revisión</option>
+            </select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="bg-softGray border-b">
+                    <th class="p-4">Usuario</th>
+                    <th class="p-4">Proceso</th>
+                    <th class="p-4">Estado ejecución</th>
+                    <th class="p-4">Estado supervisión</th>
+                    <th class="p-4">Cumplimiento</th>
+                    <th class="p-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for s in supervisiones %}
+                <tr>
+                    <td class="p-4 font-medium">{{ s.usuario.user.get_full_name }}</td>
+                    <td class="p-4">{{ s.proceso.nombre }}</td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-xs rounded-full {% if s.estado == 'completado' %}bg-green-100 text-green-800{% elif s.estado == 'en_progreso' %}bg-yellow-100 text-yellow-800{% else %}bg-gray-100{% endif %}">
+                            {{ s.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <span class="px-2 py-1 text-xs rounded-full {% if s.estado_supervision == 'aprobado' %}bg-green-100 text-green-800{% elif s.estado_supervision == 'rechazado' %}bg-red-100 text-red-800{% elif s.estado_supervision == 'en_revision' %}bg-blue-100 text-blue-800{% else %}bg-gray-100 text-gray-600{% endif %}">
+                            {{ s.get_estado_supervision_display }}
+                        </span>
+                    </td>
+                    <td class="p-4">
+                        <div class="flex items-center gap-2">
+                            <div class="w-16 bg-gray-200 rounded-full h-2">
+                                <div class="bg-secondary h-2 rounded-full" style="width: {{ s.calcular_cumplimiento }}%"></div>
+                            </div>
+                            <span>{{ s.calcular_cumplimiento }}%</span>
+                        </div>
+                    </td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'supervision_detalle' s.pk %}" class="bg-secondary px-3 py-1 rounded text-xs font-bold hover:bg-secondaryHover">Supervisar</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="6" class="p-8 text-center text-gray-400">No hay procesos pendientes de supervisión.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=supervisiones %}
+</div>
+{% endblock %}

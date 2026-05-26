@@ -1,0 +1,68 @@
+{% extends 'base.html' %}
+{% block title_page %}Detalle de mi proceso{% endblock %}
+{% block breadcrumb %}Mi Rendimiento > Detalle{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm">
+    <div class="flex justify-between items-start">
+        <div>
+            <h2 class="text-2xl font-bold">{{ ejecucion.proceso.nombre }}</h2>
+            <p class="text-gray-500">Inicio: {{ ejecucion.fecha_inicio|date:"d/m/Y H:i" }} | Fin: {{ ejecucion.fecha_fin|date:"d/m/Y H:i"|default:"—" }}</p>
+        </div>
+        <div>
+            <span class="px-3 py-1 rounded-full text-sm 
+                {% if ejecucion.estado == 'completado' %}bg-green-100 text-green-800
+                {% elif ejecucion.estado == 'en_progreso' %}bg-yellow-100 text-yellow-800
+                {% else %}bg-gray-100{% endif %}">
+                {{ ejecucion.get_estado_display }}
+            </span>
+            {% if ejecucion.estado_supervision != 'pendiente' %}
+            <span class="ml-2 px-3 py-1 rounded-full text-sm 
+                {% if ejecucion.estado_supervision == 'aprobado' %}bg-green-200 text-green-900
+                {% elif ejecucion.estado_supervision == 'rechazado' %}bg-red-200 text-red-900
+                {% else %}bg-blue-200 text-blue-900{% endif %}">
+                {{ ejecucion.get_estado_supervision_display }}
+            </span>
+            {% endif %}
+        </div>
+    </div>
+    <div class="mt-2 p-3 bg-gray-50 rounded">
+        <p><strong>Cumplimiento:</strong> {{ ejecucion.calcular_cumplimiento }}%</p>
+        <p><strong>Comentario general:</strong> {{ ejecucion.comentario_general|default:"Sin comentarios" }}</p>
+    </div>
+    <hr class="my-4">
+    <h3 class="font-bold text-lg mb-3">Pasos del proceso</h3>
+    <div class="overflow-x-auto">
+        <table class="min-w-full border">
+            <thead class="bg-gray-100">
+                <tr>
+                    <th class="p-2 border">Paso</th>
+                    <th class="p-2 border text-center">Puntaje</th>
+                    <th class="p-2 border">Evidencia</th>
+                    <th class="p-2 border">Comentario supervisión</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for p in pasos %}
+                <tr class="border-b">
+                    <td class="p-2 border">{{ p.paso.nombre }} ({{ p.get_estado_display }})</td>
+                    <td class="p-2 border text-center">{{ p.puntaje_ajustado|default:p.puntaje_original }}</td>
+                    <td class="p-2 border">
+                        {% if p.evidencia_fotografica %}
+                            <a href="{{ p.evidencia_fotografica.url }}" target="_blank" class="text-blue-500">📷 Ver foto</a><br>
+                        {% endif %}
+                        {% if p.evidencia_descriptiva %}
+                            <details><summary>📝 Ver descripción</summary><div class="mt-1 p-2 bg-gray-50 rounded">{{ p.evidencia_descriptiva|linebreaks }}</div></details>
+                        {% endif %}
+                    </td>
+                    <td class="p-2 border">{{ p.comentario_supervision|default:"—" }}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <div class="mt-6">
+        <a href="{% url 'rendimiento_procesos' %}" class="bg-gray-300 px-4 py-2 rounded hover:bg-gray-400">← Regresar</a>
+    </div>
+</div>
+{% endblock %}

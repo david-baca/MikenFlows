@@ -1,0 +1,2830 @@
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/static
+########################################
+
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/manage.py
+########################################
+
+#!/usr/bin/env python
+"""Django's command-line utility for administrative tasks."""
+import os
+import sys
+
+
+def main():
+    """Run administrative tasks."""
+    os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gestion_flujos.settings')
+    try:
+        from django.core.management import execute_from_command_line
+    except ImportError as exc:
+        raise ImportError(
+            "Couldn't import Django. Are you sure it's installed and "
+            "available on your PYTHONPATH environment variable? Did you "
+            "forget to activate a virtual environment?"
+        ) from exc
+    execute_from_command_line(sys.argv)
+
+
+if __name__ == '__main__':
+    main()
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/base.html
+########################################
+
+{% load static %}<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flow Manager | {{ title|default:"Gestión de Flujos" }}</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- CKEditor 5 -->
+        <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        primary: '#ffffff',
+                        secondary: '#bef264', // Verde Limón
+                        secondaryHover: '#a3e635',
+                        softGray: '#f9fafb',
+                        borderGray: '#e5e7eb',
+                        criticalRed: '#fee2e2',
+                        criticalRedText: '#b91c1c',
+                        criticalYellow: '#fef9c3',
+                        criticalYellowText: '#a16207',
+                        criticalGreen: '#dcfce7',
+                        criticalGreenText: '#15803d'
+                    },
+                    fontFamily: { sans: ['Inter', 'sans-serif'] }
+                }
+            }
+        }
+    </script>
+    <style>
+        body { background-color: #f9fafb; overflow: hidden; height: 100vh; }
+        .sidebar-active { background-color: #bef264; color: #000 !important; font-weight: 600; }
+        .custom-scrollbar::-webkit-scrollbar { width: 6px; }
+        .custom-scrollbar::-webkit-scrollbar-track { background: #f1f1f1; }
+        .custom-scrollbar::-webkit-scrollbar-thumb { background: #ccc; border-radius: 10px; }
+        .collapsible-content { transition: max-height 0.3s ease-out; overflow: hidden; max-height: 0; }
+        .collapsible-content.open { max-height: 2000px; }
+        .ck-editor__editable { min-height: 200px; max-height: 400px; }
+        .ck-content { font-size: 0.9rem; line-height: 1.6; }
+        .ck-content pre { background: #2d2d2d; color: #fff; padding: 1rem; border-radius: 8px; margin: 10px 0; overflow-x: auto; }
+        .ck-content code { background: #f1f1f1; color: #d63384; padding: 2px 4px; border-radius: 4px; }
+        .table-container { border-radius: 12px; overflow: hidden; border: 1px solid #e5e7eb; background: white; }
+        .modal-overlay { background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); }
+    </style>
+    {% block extra_css %}{% endblock %}
+</head>
+<body class="text-gray-800">
+
+    <div class="flex h-screen overflow-hidden">
+        <!-- SIDEBAR -->
+        <aside class="w-64 bg-white border-r border-borderGray flex flex-col flex-shrink-0 z-20">
+            <div class="p-6 border-b border-borderGray flex items-center gap-3">
+                <div class="w-8 h-8 bg-secondary rounded flex items-center justify-center shadow-sm">
+                    <i class="fas fa-bolt text-black"></i>
+                </div>
+                <h1 class="font-bold text-lg tracking-tight uppercase">Flow Manager</h1>
+            </div>
+
+            <nav class="flex-1 overflow-y-auto py-4 custom-scrollbar">
+                <div class="px-4 mb-4">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Gestión Staff</p>
+                    <a href="{% url 'staff_dashboard' %}" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 mb-1 transition-all {% if request.resolver_match.url_name == 'staff_dashboard' %}sidebar-active{% endif %}">
+                        <i class="fas fa-users w-5"></i> Mi Equipo
+                    </a>
+                    <a href="{% url 'area_dashboard' %}" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 mb-1 transition-all {% if request.resolver_match.url_name == 'area_dashboard' %}sidebar-active{% endif %}">
+                        <i class="fas fa-sitemap w-5"></i> Áreas
+                    </a>
+                </div>
+
+                <div class="px-4 mb-4">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Sistema</p>
+                    <a href="{% url 'dashboard_procesos' %}" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 mb-1 transition-all {% if request.resolver_match.url_name == 'dashboard_procesos' %}sidebar-active{% endif %}">
+                        <i class="fas fa-project-diagram w-5"></i> Procesos
+                    </a>
+                    <a href="{% url 'wiky' %}" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 mb-1 transition-all {% if request.resolver_match.url_name == 'wiky' %}sidebar-active{% endif %}">
+                        <i class="fas fa-book w-5"></i> Wiky
+                    </a>
+                </div>
+
+                <div class="px-4">
+                    <p class="text-[10px] font-bold text-gray-400 uppercase tracking-widest mb-2 px-2">Operación</p>
+                    <a href="{% url 'catalogo_procesos' %}" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 mb-1 transition-all {% if request.resolver_match.url_name == 'catalogo_procesos' %}sidebar-active{% endif %}">
+                        <i class="fas fa-play-circle w-5"></i> Mis Procesos
+                    </a>
+                    <a href="{% url 'rendimiento_procesos' %}" class="w-full flex items-center gap-3 px-3 py-2 rounded-lg text-sm text-gray-600 hover:bg-gray-100 mb-1 transition-all {% if request.resolver_match.url_name == 'rendimiento_procesos' %}sidebar-active{% endif %}">
+                        <i class="fas fa-chart-line w-5"></i> Rendimiento
+                    </a>
+                </div>
+            </nav>
+
+            <div class="p-4 bg-softGray border-t border-borderGray">
+                <form action="{% url 'logout' %}" method="post" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" class="text-[10px] text-red-400 font-bold uppercase hover:underline w-full">Cerrar sesión</button>
+                </form>
+            </div>
+        </aside>
+
+        <!-- MAIN -->
+        <div class="flex-1 flex flex-col min-w-0 bg-softGray overflow-hidden">
+            <header class="h-16 bg-white border-b border-borderGray flex items-center justify-between px-8 flex-shrink-0">
+                <div class="flex items-center gap-4">
+                    <h2 id="view-title" class="font-bold text-lg text-gray-800">{% block title_page %}{% endblock %}</h2>
+                    <div class="hidden md:flex items-center gap-2 text-xs text-gray-400">
+                        <i class="fas fa-chevron-right text-[10px]"></i>
+                        <span id="breadcrumb">{% block breadcrumb %}Inicio{% endblock %}</span>
+                    </div>
+                </div>
+                <div id="current-date" class="text-xs text-gray-400 font-medium"></div>
+            </header>
+
+            <main id="app-viewport" class="flex-1 overflow-y-auto p-8 custom-scrollbar">
+                {% if messages %}
+                    {% for message in messages %}
+                        <div class="mb-4 p-4 rounded-xl {% if message.tags == 'success' %}bg-green-100 text-green-800 border border-green-200{% elif message.tags == 'error' %}bg-red-100 text-red-800 border border-red-200{% else %}bg-blue-100 text-blue-800 border border-blue-200{% endif %}">
+                            {{ message }}
+                        </div>
+                    {% endfor %}
+                {% endif %}
+                {% block content %}{% endblock %}
+            </main>
+        </div>
+    </div>
+
+    <div id="modal-container" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 modal-overlay"></div>
+
+    <script>
+        // Fecha actual en el header
+        document.getElementById('current-date').innerText = new Date().toLocaleDateString('es-MX', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+        
+        // Función para mostrar ayuda modal (usada en ejecución de pasos)
+        function showHelpModal(title, contentHtml) {
+            const modal = document.getElementById('modal-container');
+            modal.innerHTML = `<div class="bg-white p-10 rounded-[2.5rem] max-w-[80%] w-full shadow-2xl relative border-2 border-secondary">
+                <h3 class="text-2xl font-black text-gray-800 mb-6 border-b pb-4">${title}</h3>
+                <div class="ck-content max-h-96 overflow-y-auto text-sm text-gray-600 custom-scrollbar">${contentHtml}</div>
+                <button onclick="document.getElementById('modal-container').classList.add('hidden')" class="w-full mt-10 bg-black text-white py-4 rounded-2xl font-bold uppercase tracking-widest text-xs hover:bg-secondary hover:text-black transition-all">Cerrar Ayuda</button>
+            </div>`;
+            modal.classList.remove('hidden');
+        }
+
+        // Para el collapse de zonas (si se usa)
+        function toggleCollapse(id) {
+            document.getElementById(id).classList.toggle('open');
+        }
+    </script>
+    {% block extra_js %}{% endblock %}
+</body>
+</html>
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/registration/login.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Iniciar sesión{% endblock %}
+{% block content %}
+<div class="flex justify-center items-center min-h-[80vh]">
+    <div class="max-w-md w-full bg-white p-8 rounded-2xl border shadow-sm">
+        <div class="text-center mb-8">
+            <div class="w-12 h-12 bg-secondary rounded-full flex items-center justify-center mx-auto mb-4">
+                <i class="fas fa-bolt text-black text-xl"></i>
+            </div>
+            <h2 class="text-2xl font-bold">Flow Manager</h2>
+            <p class="text-gray-500 text-sm">Ingresa tus credenciales</p>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="space-y-4">
+                <div>
+                    <input type="text" name="username" placeholder="Usuario" class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-secondary outline-none">
+                </div>
+                <div>
+                    <input type="password" name="password" placeholder="Contraseña" class="w-full border rounded-xl p-3 focus:ring-2 focus:ring-secondary outline-none">
+                </div>
+                <button type="submit" class="w-full bg-black text-white py-3 rounded-xl font-bold hover:bg-secondary hover:text-black transition-all">Ingresar</button>
+            </div>
+        </form>
+        {% if form.errors %}
+        <div class="mt-4 p-3 bg-red-100 text-red-700 rounded-xl text-sm text-center">Usuario o contraseña incorrectos.</div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/proceso_detalle.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Visualización de Proceso{% endblock %}
+{% block breadcrumb %}{{ proceso.nombre }}{% endblock %}
+{% block content %}
+<div class="bg-white p-8 rounded-3xl border shadow-sm mb-8 flex justify-between items-center">
+    <div>
+        <h2 class="text-2xl font-black">{{ proceso.nombre }}</h2>
+        <p class="text-xs text-gray-400">{{ proceso.area.nombre }} | Crítico: {{ proceso.get_nivel_critico_display }}</p>
+        <p class="text-sm mt-2">{{ proceso.objetivo|default:"Sin objetivo definido" }}</p>
+    </div>
+    <a href="{% url 'paso_crear' proceso.pk %}" class="bg-black text-white px-6 py-3 rounded-2xl text-sm font-bold shadow-lg">+ Crear Paso</a>
+</div>
+
+<div class="space-y-4">
+    {% for paso in pasos %}
+    <div class="bg-white p-6 rounded-2xl border flex justify-between items-center group hover:border-secondary transition-all shadow-sm">
+        <div class="flex items-center gap-6">
+            <div class="w-10 h-10 bg-gray-50 rounded-full flex items-center justify-center font-black text-gray-300 group-hover:bg-secondary group-hover:text-black transition-all">{{ paso.orden }}</div>
+            <div>
+                <h4 class="font-bold text-gray-800">{{ paso.nombre }}</h4>
+                <p class="text-[10px] uppercase font-bold text-gray-400">{{ paso.get_tipo_display }} | Puntos: {{ paso.puntos }}</p>
+            </div>
+        </div>
+        <div class="flex gap-2">
+            <a href="{% url 'paso_editar' proceso.pk paso.pk %}" class="p-2 text-gray-300 hover:text-black"><i class="fas fa-edit"></i></a>
+            <a href="{% url 'paso_eliminar' proceso.pk paso.pk %}" class="p-2 text-red-300 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+        </div>
+    </div>
+    {% empty %}
+    <div class="bg-white p-8 text-center rounded-2xl border-2 border-dashed text-gray-400">
+        No hay pasos definidos para este proceso.
+    </div>
+    {% endfor %}
+</div>
+
+<div class="mt-8 text-right">
+    <a href="{% url 'dashboard_procesos' %}" class="text-sm text-gray-400 hover:text-black">← Volver a la lista de procesos</a>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/rendimiento_equipo.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Rendimiento del Equipo{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b"><h3 class="font-bold">Procesos de personas a tu cargo</h3></div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <input type="date" name="fecha" class="border rounded p-2" value="{{ filtros.fecha }}">
+            <select name="estado" class="border rounded p-2"><option value="">Estado</option><option value="en_progreso">En progreso</option><option value="completado">Completado</option><option value="supervisado">Supervisado</option></select>
+            <select name="usuario" class="border rounded p-2"><option value="">Usuario</option>{% for u in usuarios %}<option value="{{ u.id }}" {% if filtros.usuario == u.id|stringformat:'s' %}selected{% endif %}>{{ u.user.get_full_name }}</option>{% endfor %}</select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <table class="w-full text-left text-sm">
+        <thead><tr class="bg-softGray border-b"><th>Usuario</th><th>Proceso</th><th>Estado</th><th>Cumplimiento</th><th>Última actualización</th><th>Acciones</th></tr></thead>
+        <tbody>
+            {% for ejec in ejecuciones %}
+            <tr><td class="p-4">{{ ejec.usuario.user.get_full_name }}</td><td class="p-4">{{ ejec.proceso.nombre }}</td><td class="p-4">{{ ejec.get_estado_display }}</td><td class="p-4">{{ ejec.calcular_cumplimiento }}%</td><td class="p-4">{{ ejec.fecha_inicio|date:"d/m/Y H:i" }}</td><td class="p-4"><a href="{% url 'detalle_rendimiento_equipo' ejec.pk %}" class="bg-secondary px-3 py-1 rounded text-xs">Ver detalle</a></td></tr>
+            {% empty %}<tr><td colspan="6" class="p-4 text-center">Sin ejecuciones</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% include 'pagination.html' with page=ejecuciones %}
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/staff_form.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('border-black', 'font-bold');
+            el.classList.add('text-gray-400');
+        });
+        document.getElementById('content-' + tab).classList.remove('hidden');
+        const activeTab = document.getElementById('tab-' + tab);
+        activeTab.classList.add('border-black', 'font-bold');
+        activeTab.classList.remove('text-gray-400');
+    }
+
+    function toggleEquipoTab() {
+        const rolSelect = document.getElementById('id_rol');
+        const equipoTab = document.getElementById('tab-equipo');
+        const rolesPermitidos = ['admin', 'supervisor', 'auditor'];
+        if (rolesPermitidos.includes(rolSelect.value)) {
+            equipoTab.classList.remove('hidden');
+        } else {
+            equipoTab.classList.add('hidden');
+            // Si la pestaña equipo está activa y se oculta, cambiar a general
+            if (document.getElementById('tab-equipo').classList.contains('border-black')) {
+                showTab('general');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const rolSelect = document.getElementById('id_rol');
+        if (rolSelect) {
+            rolSelect.addEventListener('change', toggleEquipoTab);
+            toggleEquipoTab(); // ejecutar al cargar
+        }
+        // Mostrar primera pestaña por defecto
+        showTab('general');
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <!-- Tabs -->
+    <div class="mb-6 border-b">
+        <div class="flex gap-6">
+            <button type="button" onclick="showTab('general')" id="tab-general"
+                class="tab-btn border-b-2 border-black font-bold pb-2">
+                General
+            </button>
+            <button type="button" onclick="showTab('config')" id="tab-config"
+                class="tab-btn text-gray-400 pb-2">
+                Configuración
+            </button>
+            <button type="button" onclick="showTab('equipo')" id="tab-equipo"
+                class="tab-btn text-gray-400 pb-2 hidden">
+                Equipo a cargo
+            </button>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- TAB GENERAL (Datos personales) -->
+        <div id="content-general" class="tab-content space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre de usuario</label>
+                <input type="text" name="username" value="{{ form.username.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre(s)</label>
+                <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Apellidos</label>
+                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Contraseña (dejar en blanco para no cambiar)</label>
+                <input type="password" name="password" class="w-full border rounded-xl p-3">
+            </div>
+        </div>
+
+        <!-- TAB CONFIGURACIÓN (Rol, área, permisos, procesos, mínimo) -->
+        <div id="content-config" class="tab-content hidden space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Rol</label>
+                <select name="rol" id="id_rol" class="w-full border rounded-xl p-3 bg-white">
+                    {% for value, label in form.rol.field.choices %}
+                    <option value="{{ value }}" {% if form.rol.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Área asignada</label>
+                <select name="area_asignada" class="w-full border rounded-xl p-3 bg-white">
+                    <option value="">---------</option>
+                    {% for area in form.area_asignada.field.queryset %}
+                    <option value="{{ area.pk }}" {% if form.area_asignada.value == area.pk %}selected{% endif %}>{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Mínimo (%)</label>
+                <input type="number" name="minimo_porcentaje" value="{{ form.minimo_porcentaje.value|default:0 }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Procesos asignados</label>
+                <select multiple name="procesos_asignados" class="w-full border rounded-xl p-3" size="5">
+                    {% for proceso in form.procesos_asignados.field.queryset %}
+                    <option value="{{ proceso.pk }}" {% if proceso.pk in form.procesos_asignados.value %}selected{% endif %}>{{ proceso.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <label><input type="checkbox" name="puede_gestionar_staff" {% if form.puede_gestionar_staff.value %}checked{% endif %}> Gestionar Staff</label>
+                <label><input type="checkbox" name="puede_gestionar_areas" {% if form.puede_gestionar_areas.value %}checked{% endif %}> Gestionar Áreas</label>
+                <label><input type="checkbox" name="puede_gestionar_procesos" {% if form.puede_gestionar_procesos.value %}checked{% endif %}> Gestionar Procesos</label>
+                <label><input type="checkbox" name="puede_gestionar_pasos" {% if form.puede_gestionar_pasos.value %}checked{% endif %}> Gestionar Pasos</label>
+                <label><input type="checkbox" name="puede_supervisar" {% if form.puede_supervisar.value %}checked{% endif %}> Puede Supervisar</label>
+            </div>
+        </div>
+
+        <!-- TAB EQUIPO A CARGO -->
+        <div id="content-equipo" class="tab-content hidden space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Usuarios a cargo</label>
+                <select multiple name="equipo_a_cargo" class="w-full border rounded-xl p-3" size="8">
+                    {% for staff in form.equipo_a_cargo.field.queryset %}
+                    <option value="{{ staff.pk }}" {% if staff.pk in form.equipo_a_cargo.value %}selected{% endif %}>
+                        {{ staff.user.get_full_name|default:staff.user.username }} ({{ staff.get_rol_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-400 mt-1">Selecciona los usuarios que estarán a tu cargo (solo para roles Administrador, Supervisor o Auditor).</p>
+            </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'staff_dashboard' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/supervision_dashboard.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Supervisión Pendiente{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b"><h3 class="font-bold">Procesos para revisar</h3></div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <select name="usuario"><option value="">Usuario</option>{% for u in usuarios %}<option value="{{ u.id }}">{{ u.user.get_full_name }}</option>{% endfor %}</select>
+            <select name="proceso"><option value="">Proceso</option>{% for p in procesos %}<option value="{{ p.id }}">{{ p.nombre }}</option>{% endfor %}</select>
+            <select name="estado_sup"><option value="">Estado supervisión</option><option value="pendiente">Pendiente</option><option value="en_revision">En revisión</option></select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <table class="w-full text-left text-sm"><thead><tr><th>Usuario</th><th>Proceso</th><th>Estado ejecución</th><th>Estado supervisión</th><th>Acciones</th></tr></thead>
+    <tbody>{% for s in supervisiones %}<tr><td>{{ s.usuario.user.get_full_name }}</td><td>{{ s.proceso.nombre }}</td><td>{{ s.get_estado_display }}</td><td>{{ s.get_estado_supervision_display }}</td><td><a href="{% url 'supervision_detalle' s.pk %}" class="bg-secondary px-3 py-1 rounded text-xs">Supervisar</a></td></tr>{% empty %}<tr><td colspan="5">Sin supervisiones pendientes</td></tr>{% endfor %}</tbody>
+    </table>
+    {% include 'pagination.html' with page=supervisiones %}
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/planificacion_dashboard.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Planificación de Procesos{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Reglas de recurrencia</h3>
+        <a href="{% url 'planificacion_crear' %}" class="bg-secondary px-4 py-2 rounded-lg font-bold text-sm">+ Crear Planificación</a>
+    </div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <select name="proceso" class="border rounded p-2"><option value="">Todos los procesos</option>{% for p in procesos %}<option value="{{ p.id }}" {% if filtros.proceso == p.id|stringformat:'s' %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}</select>
+            <select name="frecuencia" class="border rounded p-2"><option value="">Frecuencia</option><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="mensual">Mensual</option></select>
+            <select name="estado" class="border rounded p-2"><option value="">Estado</option><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <table class="w-full text-left text-sm">
+        <thead><tr class="bg-softGray border-b"><th class="p-4">Proceso</th><th class="p-4">Frecuencia</th><th class="p-4">Regla</th><th class="p-4">Usuario asignado</th><th class="p-4">Estado</th><th class="p-4 text-right">Acciones</th></tr></thead>
+        <tbody>
+            {% for plan in planificaciones %}
+            <tr><td class="p-4">{{ plan.proceso.nombre }}</td><td class="p-4">{{ plan.get_frecuencia_display }}</td><td class="p-4">{{ plan.regla }}</td><td class="p-4">{{ plan.usuario_asignado.user.get_full_name }}</td><td class="p-4">{% if plan.activo %}Activo{% else %}Inactivo{% endif %}</td><td class="p-4 text-right"><a href="{% url 'planificacion_editar' plan.pk %}" class="text-gray-400 hover:text-black"><i class="fas fa-edit"></i></a> <a href="{% url 'planificacion_eliminar' plan.pk %}" class="text-red-400"><i class="fas fa-trash-alt"></i></a></td></tr>
+            {% empty %}<tr><td colspan="6" class="p-4 text-center">Sin planificaciones</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% include 'pagination.html' with page=planificaciones %}
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/detalle_rendimiento.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Detalle de mi proceso{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm">
+    <h2 class="text-2xl font-bold">{{ ejecucion.proceso.nombre }}</h2>
+    <p>Estado: {{ ejecucion.get_estado_display }} | Cumplimiento: {{ ejecucion.calcular_cumplimiento }}%</p>
+    <p>Comentario general: {{ ejecucion.comentario_general|default:"Sin comentarios" }}</p>
+    <hr class="my-4">
+    <h3 class="font-bold">Pasos</h3>
+    <table class="w-full mt-2"><thead><tr><th>Paso</th><th>Puntaje</th><th>Evidencia</th><th>Comentario supervisión</th></tr></thead>
+    <tbody>{% for p in pasos %}<tr><td>{{ p.paso.nombre }}</td><td>{{ p.puntaje_ajustado|default:p.puntaje_original }}</td><td>{% if p.evidencia_fotografica %}📷 {% endif %}{% if p.evidencia_descriptiva %}📝 {% endif %}</td><td>{{ p.comentario_supervision|default:"—" }}</td></tr>{% endfor %}</tbody>
+    </table>
+    <div class="mt-4"><a href="{% url 'rendimiento_procesos' %}" class="text-gray-400">← Regresar</a></div>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/detalle_rendimiento_equipo.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Detalle del proceso de equipo{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm">
+    <h2 class="text-2xl font-bold">{{ ejecucion.proceso.nombre }}</h2>
+    <p>Usuario: {{ ejecucion.usuario.user.get_full_name }} | Estado: {{ ejecucion.get_estado_display }} | Cumplimiento: {{ ejecucion.calcular_cumplimiento }}%</p>
+    <p>Comentario general: {{ ejecucion.comentario_general|default:"Sin comentarios" }}</p>
+    <hr class="my-4">
+    <form method="post" action="{% url 'supervision_detalle' ejecucion.pk %}">
+        {% csrf_token %}
+        <h3 class="font-bold">Pasos</h3>
+        <table class="w-full mt-2"><thead><tr><th>Paso</th><th>Puntaje original</th><th>Puntaje ajustado</th><th>Evidencia</th><th>Comentario</th></tr></thead>
+        <tbody>{% for p in pasos %}<tr><td>{{ p.paso.nombre }}</td><td>{{ p.puntaje_original }}</td><td><input type="number" name="puntaje_ajustado_{{ p.id }}" value="{{ p.puntaje_ajustado|default:p.puntaje_original }}" class="border rounded w-20"></td><td>{% if p.evidencia_fotografica %}📷 {% endif %}{% if p.evidencia_descriptiva %}📝 {% endif %}</td><td><input type="text" name="comentario_supervision_{{ p.id }}" value="{{ p.comentario_supervision }}" class="border rounded w-40"></td></tr>{% endfor %}</tbody>
+        </table>
+        <div class="mt-4"><textarea name="comentario_general" placeholder="Comentario general" class="w-full border rounded p-2">{{ ejecucion.comentario_general }}</textarea></div>
+        <div class="mt-4 flex gap-4"><button type="submit" name="guardar" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar cambios</button><button type="submit" name="aprobar" class="bg-green-500 text-white px-4 py-2 rounded">Aprobar</button><button type="submit" name="rechazar" class="bg-red-500 text-white px-4 py-2 rounded">Rechazar</button><a href="{% url 'rendimiento_equipo' %}" class="bg-gray-300 px-4 py-2 rounded">Cancelar</a></div>
+    </form>
+    <div class="mt-4"><a href="{% url 'rendimiento_equipo' %}" class="text-gray-400">← Regresar</a></div>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/supervision_detalle.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Supervisión de Proceso{% endblock %}
+{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm">
+    <h2 class="text-2xl font-bold">{{ ejecucion.proceso.nombre }}</h2>
+    <p>Usuario: {{ ejecucion.usuario.user.get_full_name }} | Estado ejecución: {{ ejecucion.get_estado_display }}</p>
+    <form method="post">
+        {% csrf_token %}
+        <table class="w-full mt-4 border"><thead><tr><th>Paso</th><th>Puntaje original</th><th>Puntaje ajustado</th><th>Evidencia</th><th>Comentario supervisión</th></tr></thead>
+        <tbody>{% for p in pasos %}<tr><td>{{ p.paso.nombre }}</td><td>{{ p.puntaje_original }}</td><td><input type="number" name="puntaje_ajustado_{{ p.id }}" value="{{ p.puntaje_ajustado|default:p.puntaje_original }}" class="border rounded w-20"></td><td>{% if p.evidencia_fotografica %}📷 <a href="{{ p.evidencia_fotografica.url }}" target="_blank">Ver</a>{% endif %} {% if p.evidencia_descriptiva %}<br>📝 {{ p.evidencia_descriptiva|truncatewords:10 }}{% endif %}</td><td><input type="text" name="comentario_supervision_{{ p.id }}" value="{{ p.comentario_supervision }}" class="border rounded w-full"></td></tr>{% endfor %}</tbody>
+        </table>
+        <div class="mt-4"><label>Comentario general</label><textarea name="comentario_general" class="w-full border rounded p-2">{{ ejecucion.comentario_general }}</textarea></div>
+        <div class="mt-4 flex gap-4"><button type="submit" name="guardar" class="bg-blue-500 text-white px-4 py-2 rounded">Guardar cambios</button><button type="submit" name="aprobar" class="bg-green-500 text-white px-4 py-2 rounded">Aprobar</button><button type="submit" name="rechazar" class="bg-red-500 text-white px-4 py-2 rounded">Rechazar</button><a href="{% url 'supervision_dashboard' %}" class="bg-gray-300 px-4 py-2 rounded">Cancelar</a></div>
+    </form>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/staff_dashboard.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Gestión de Staff{% endblock %}
+{% block breadcrumb %}Mi Equipo{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Dashboard Staff</h3>
+        <a href="{% url 'staff_crear' %}" class="bg-secondary px-4 py-2 rounded-lg font-bold text-sm">+ Crear Staff</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="bg-softGray border-b text-[10px] uppercase font-bold text-gray-400">
+                    <th class="p-4">Nombre</th>
+                    <th class="p-4">Rol</th>
+                    <th class="p-4">Área</th>
+                    <th class="p-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for s in staff_list %}
+                <tr>
+                    <td class="p-4 font-bold">{{ s.user.get_full_name|default:s.user.username }}</td>
+                    <td class="p-4">{{ s.get_rol_display }}</td>
+                    <td class="p-4">{{ s.area_asignada.nombre|default:"—" }}</td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'staff_editar' s.pk %}" class="text-gray-400 hover:text-black mr-2"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'staff_eliminar' s.pk %}" class="text-red-400 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="p-4 text-center text-gray-400">No hay staff registrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=staff_list %}
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/ejecutar_paso.html
+########################################
+
+{% extends 'base.html' %}
+{% load static %}
+{% block title_page %}Ejecutando: {{ proceso.nombre }}{% endblock %}
+{% block breadcrumb %}Ejecución{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white p-10 rounded-[3.5rem] border-2 border-secondary shadow-2xl relative overflow-hidden">
+        <div class="mb-10">
+            <span class="bg-black text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Paso {{ paso.orden }}: {{ paso.nombre }}</span>
+            <h3 class="text-3xl font-black mt-4 text-gray-800 leading-tight">
+                {% if paso.tipo == 'condicional' %}{{ paso.pregunta_condicion }}{% else %}{{ paso.nombre }}{% endif %}
+            </h3>
+            {% if paso.descripcion %}
+            <div class="mt-4 text-gray-600">{{ paso.descripcion|linebreaks }}</div>
+            {% endif %}
+        </div>
+        <div class="flex flex-col gap-4">
+            <button onclick="showHelpModal('{{ paso.nombre }}', `{{ paso.ayuda_html|escapejs }}`)" class="w-full bg-gray-50 border py-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-white transition-all shadow-sm">
+                <i class="fas fa-question-circle text-secondary text-lg"></i> VER AYUDA
+            </button>
+            <div class="mt-6 border-t pt-6">
+                {% if paso.tipo == 'condicional' %}
+                <div class="grid grid-cols-2 gap-4">
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="respuesta_condicion" value="si">
+                        <button type="submit" class="w-full bg-secondary hover:bg-secondaryHover py-5 rounded-2xl font-black uppercase tracking-[3px] shadow-lg shadow-secondary/20 transition-all">SÍ</button>
+                    </form>
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="respuesta_condicion" value="no">
+                        <button type="submit" class="w-full bg-gray-100 hover:bg-gray-200 py-5 rounded-2xl font-black uppercase tracking-[3px] transition-all">NO</button>
+                    </form>
+                </div>
+                {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="respuesta_condicion" value="listo">
+                    <button type="submit" class="w-full bg-secondary hover:bg-secondaryHover py-5 rounded-2xl font-black uppercase tracking-[3px] shadow-lg shadow-secondary/20 transition-all">LISTO / SIGUIENTE</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/proceso_dashboard.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Procesos del Sistema{% endblock %}
+{% block breadcrumb %}Administración de Procesos{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Procesos registrados</h3>
+        <a href="{% url 'proceso_crear' %}" class="bg-black text-white px-4 py-2 rounded-lg text-sm font-bold">+ Crear Proceso</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="bg-softGray border-b text-[10px] uppercase font-bold text-gray-400">
+                    <th class="p-4">Proceso</th>
+                    <th class="p-4">Área</th>
+                    <th class="p-4">Nivel crítico</th>
+                    <th class="p-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for p in procesos %}
+                <tr>
+                    <td class="p-4 font-bold">{{ p.nombre }}</td>
+                    <td class="p-4">{{ p.area.nombre }}</td>
+                    <td class="p-4">{{ p.get_nivel_critico_display }}</td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'proceso_visualizar' p.pk %}" class="bg-secondary px-3 py-1 rounded text-[10px] font-bold uppercase mr-2 shadow-sm">Ver Pasos</a>
+                        <a href="{% url 'proceso_editar' p.pk %}" class="text-gray-300 hover:text-black p-2"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'proceso_eliminar' p.pk %}" class="text-red-300 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="p-4 text-center text-gray-400">No hay procesos registrados.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=procesos %}
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/wiky.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Wiky Operativa{% endblock %}
+{% block breadcrumb %}Directorio Automático{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-10 rounded-[3rem] border shadow-sm">
+    <div class="mb-10 pb-4 border-b">
+        <h2 class="text-3xl font-black text-gray-800">Wiky Operativa</h2>
+        <p class="text-xs text-gray-400 uppercase font-bold tracking-widest mt-1">Estructura de flujos por área y proceso</p>
+    </div>
+    {% for area in areas %}
+    <div class="mb-8 border-l-4 border-secondary pl-6">
+        <h3 class="font-bold text-gray-800 uppercase tracking-tighter">{{ area.nombre }}</h3>
+        <div class="mt-4 space-y-2">
+            {% for proceso in area.procesos.all %}
+            <p class="text-sm font-medium text-gray-500 hover:text-secondaryHover cursor-pointer">/ {{ proceso.nombre }}</p>
+            {% empty %}
+            <p class="text-xs text-gray-400 italic">No hay procesos en esta área.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-400 text-center py-10">No hay áreas registradas.</p>
+    {% endfor %}
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/rendimiento.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Mi Rendimiento{% endblock %}
+{% block breadcrumb %}Rendimiento{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+    <div class="p-6 border-b bg-gray-50 font-bold">Procesos ejecutados</div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proceso</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inicio</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cumplimiento</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for ejec in ejecuciones %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ ejec.proceso.nombre }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ejec.fecha_inicio|date:"d/m/Y H:i" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if ejec.estado == 'completado' %}bg-green-100 text-green-800
+                            {% elif ejec.estado == 'en_progreso' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ ejec.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center gap-2">
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-secondary h-2 rounded-full" style="width: {{ ejec.calcular_cumplimiento }}%"></div>
+                            </div>
+                            <span>{{ ejec.calcular_cumplimiento }}%</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex gap-2">
+                        {% if ejec.estado == 'en_progreso' %}
+                            <a href="{% url 'ejecutar_proceso' ejec.proceso.pk %}" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">Continuar</a>
+                        {% endif %}
+                        <a href="{% url 'detalle_mi_rendimiento' ejec.pk %}" class="bg-secondary px-3 py-1 rounded text-xs hover:bg-secondaryHover">Ver detalle</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400">No hay ejecuciones registradas aún.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=ejecuciones %}
+</div>
+{% endblock %}
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/planificacion_form.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'planificacion_dashboard' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/area_form.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre del área</label>
+                <input type="text" name="nombre" value="{{ form.nombre.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Descripción</label>
+                <textarea name="descripcion" class="w-full border rounded-xl p-3">{{ form.descripcion.value|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Responsable</label>
+                <select name="responsable" class="w-full border rounded-xl p-3 bg-white">
+                    <option value="">---------</option>
+                    {% for staff in form.responsable.field.queryset %}
+                    <option value="{{ staff.pk }}" {% if form.responsable.value == staff.pk %}selected{% endif %}>{{ staff.user.get_full_name|default:staff.user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Mínimo requerido (%)</label>
+                <input type="number" name="minimo_requerido" value="{{ form.minimo_requerido.value|default:0 }}" class="w-full border rounded-xl p-3">
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'area_dashboard' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/proceso_form.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre del proceso</label>
+                <input type="text" name="nombre" value="{{ form.nombre.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Área</label>
+                <select name="area" class="w-full border rounded-xl p-3 bg-white">
+                    {% for area in form.area.field.queryset %}
+                    <option value="{{ area.pk }}" {% if form.area.value == area.pk %}selected{% endif %}>{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Objetivo</label>
+                <textarea name="objetivo" class="w-full border rounded-xl p-3">{{ form.objetivo.value|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Video de ayuda (URL)</label>
+                <input type="url" name="video_ayuda" value="{{ form.video_ayuda.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nivel crítico</label>
+                <select name="nivel_critico" class="w-full border rounded-xl p-3 bg-white">
+                    {% for value, label in form.nivel_critico.field.choices %}
+                    <option value="{{ value }}" {% if form.nivel_critico.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Tiempo estimado (minutos)</label>
+                <input type="number" name="tiempo_estimado" value="{{ form.tiempo_estimado.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label><input type="checkbox" name="activo" {% if form.activo.value %}checked{% endif %}> Activo</label>
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'dashboard_procesos' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/catalogo_procesos.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Catálogo de Procesos{% endblock %}
+{% block breadcrumb %}Mis Procesos{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for proceso in procesos %}
+    <div class="bg-white p-8 rounded-3xl border hover:shadow-2xl transition-all flex flex-col justify-between group">
+        <div>
+            <span class="text-[9px] font-black uppercase bg-gray-100 px-2 py-1 rounded text-gray-400">{{ proceso.area.nombre }}</span>
+            <h3 class="font-bold text-lg mt-2">{{ proceso.nombre }}</h3>
+            <p class="text-xs text-gray-400 mt-1">Crítico: {{ proceso.get_nivel_critico_display }}</p>
+        </div>
+        <a href="{% url 'ejecutar_proceso' proceso.pk %}" class="mt-8 bg-black text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-secondary hover:text-black transition-all shadow-lg text-center block">Iniciar Proceso</a>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+        <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-400">No hay procesos disponibles para ti.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginación (si usas paginación de Django) -->
+{% if is_paginated %}
+<div class="mt-8 flex justify-center">
+    <nav class="inline-flex rounded-md shadow-sm">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Anterior</a>
+        {% endif %}
+        <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Siguiente</a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/paso_form.html
+########################################
+
+{% extends 'base.html' %}
+{% load static %}
+
+{% block extra_js %}
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        const tipoSelect = document.getElementById('id_tipo');
+        if (tipoSelect) {
+            tipoSelect.addEventListener('change', toggleCondSection);
+            toggleCondSection();
+        }
+    });
+    function toggleCondSection() {
+        const tipo = document.getElementById('id_tipo').value;
+        const condSection = document.getElementById('cond-section');
+        if (condSection) {
+            condSection.classList.toggle('hidden', tipo !== 'condicional');
+        }
+    }
+</script>
+{% endblock %}
+
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-4xl mx-auto bg-white p-10 rounded-[2.5rem] border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        {{ form.media }}
+        
+        <!-- Mostrar errores generales del formulario -->
+        {% if form.non_field_errors %}
+        <div class="mb-4 p-3 bg-red-100 text-red-700 rounded-xl">
+            {{ form.non_field_errors }}
+        </div>
+        {% endif %}
+
+        <div class="grid grid-cols-2 gap-6 mb-6">
+            <div class="col-span-2">
+                <label class="text-[10px] font-bold text-gray-400 uppercase">Nombre del Paso *</label>
+                {{ form.nombre }}
+                {{ form.nombre.errors }}
+            </div>
+            <div>
+                {{ form.puntos.label_tag }} {{ form.puntos }}
+                {{ form.puntos.errors }}
+            </div>
+            <div>
+                {{ form.orden.label_tag }} {{ form.orden }}
+                {{ form.orden.errors }}
+            </div>
+            <div>
+                {{ form.tipo.label_tag }} {{ form.tipo }}
+                {{ form.tipo.errors }}
+            </div>
+            <div>
+                {{ form.nivel_critico.label_tag }} {{ form.nivel_critico }}
+                {{ form.nivel_critico.errors }}
+            </div>
+            <div>
+                {{ form.evidencia_tipo.label_tag }} {{ form.evidencia_tipo }}
+                {{ form.evidencia_tipo.errors }}
+            </div>
+        </div>
+
+        <div>
+            {{ form.descripcion.label_tag }} {{ form.descripcion }}
+            {{ form.descripcion.errors }}
+        </div>
+
+        <div id="cond-section" class="hidden bg-softGray p-6 rounded-3xl border-2 border-dashed border-gray-200 my-6">
+            <p class="text-[10px] font-black text-secondaryHover mb-4 uppercase">Lógica de Decisión</p>
+            <div class="space-y-4">
+                <div>
+                    {{ form.pregunta_condicion.label_tag }} {{ form.pregunta_condicion }}
+                    {{ form.pregunta_condicion.errors }}
+                </div>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        {{ form.paso_si.label_tag }} {{ form.paso_si }}
+                        {{ form.paso_si.errors }}
+                    </div>
+                    <div>
+                        {{ form.paso_no.label_tag }} {{ form.paso_no }}
+                        {{ form.paso_no.errors }}
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="my-8">
+            {{ form.ayuda_html.label_tag }} {{ form.ayuda_html }}
+            {{ form.ayuda_html.errors }}
+        </div>
+
+        <div class="flex justify-end gap-3 pt-6 border-t">
+            <a href="{% url 'proceso_visualizar' proceso.pk %}" class="px-8 py-3 font-bold text-gray-400">Cancelar</a>
+            <button type="submit" class="bg-black text-white px-10 py-3 rounded-2xl font-bold shadow-xl">Guardar Paso</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/area_dashboard.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Áreas{% endblock %}
+{% block breadcrumb %}Catálogo de Áreas{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for a in areas %}
+    <div class="bg-white p-6 rounded-2xl border hover:shadow-lg transition-all">
+        <h3 class="font-bold text-lg">{{ a.nombre }}</h3>
+        <p class="text-xs text-gray-400 mb-4">{{ a.descripcion|truncatechars:60 }}</p>
+        <div class="pt-4 border-t flex justify-between items-center">
+            <span class="text-xs font-bold text-secondaryHover">Min: {{ a.minimo_requerido }}%</span>
+            <div>
+                <a href="{% url 'area_editar' a.pk %}" class="text-gray-300 hover:text-black mr-2"><i class="fas fa-edit"></i></a>
+                <a href="{% url 'area_eliminar' a.pk %}" class="text-red-300 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+        <i class="fas fa-building text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-400">No hay áreas registradas.</p>
+    </div>
+    {% endfor %}
+    <div onclick="location.href='{% url 'area_crear' %}'" class="border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center p-6 cursor-pointer hover:bg-white text-gray-300 hover:text-secondary transition-all">
+        + Crear Área
+    </div>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/core/confirm_delete.html
+########################################
+
+{% extends 'base.html' %}
+{% block title_page %}Confirmar eliminación{% endblock %}
+{% block content %}
+<div class="max-w-md mx-auto bg-white p-8 rounded-2xl border shadow-sm text-center">
+    <i class="fas fa-exclamation-triangle text-4xl text-red-400 mb-4"></i>
+    <h3 class="text-xl font-bold mb-2">¿Eliminar {{ tipo }}?</h3>
+    <p class="text-gray-500 mb-6">Estás a punto de eliminar "{{ object }}". Esta acción no se puede deshacer.</p>
+    <form method="post">
+        {% csrf_token %}
+        <div class="flex justify-center gap-4">
+            <a href="{% url cancel_url %}" class="px-6 py-2 border rounded-xl text-gray-600 hover:bg-gray-100">Cancelar</a>
+            <button type="submit" class="px-6 py-2 bg-red-500 text-white rounded-xl hover:bg-red-600">Confirmar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/templates/pagination.html
+########################################
+
+{% if page.has_other_pages %}
+<div class="flex justify-center mt-6">
+    <nav class="inline-flex rounded-md shadow-sm">
+        {% if page.has_previous %}
+        <a href="?page={{ page.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Anterior</a>
+        {% endif %}
+        <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700">Página {{ page.number }} de {{ page.paginator.num_pages }}</span>
+        {% if page.has_next %}
+        <a href="?page={{ page.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Siguiente</a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/gestion_flujos/asgi.py
+########################################
+
+"""
+ASGI config for gestion_flujos project.
+
+It exposes the ASGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/4.2/howto/deployment/asgi/
+"""
+
+import os
+
+from django.core.asgi import get_asgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gestion_flujos.settings')
+
+application = get_asgi_application()
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/gestion_flujos/urls.py
+########################################
+
+from django.contrib import admin
+from django.urls import path, include
+from django.conf import settings
+from django.conf.urls.static import static
+
+urlpatterns = [
+    path('admin/', admin.site.urls),
+    path('', include('core.urls')),
+    path('accounts/', include('django.contrib.auth.urls')),
+] + static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/gestion_flujos/wsgi.py
+########################################
+
+"""
+WSGI config for gestion_flujos project.
+
+It exposes the WSGI callable as a module-level variable named ``application``.
+
+For more information on this file, see
+https://docs.djangoproject.com/en/4.2/howto/deployment/wsgi/
+"""
+
+import os
+
+from django.core.wsgi import get_wsgi_application
+
+os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'gestion_flujos.settings')
+
+application = get_wsgi_application()
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/gestion_flujos/settings.py
+########################################
+
+
+from pathlib import Path
+import os
+
+BASE_DIR = Path(__file__).resolve().parent.parent
+SECRET_KEY = 'django-insecure-clave-temporal-123456'
+DEBUG = True
+ALLOWED_HOSTS = []
+
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'django.contrib.contenttypes',
+    'django.contrib.sessions',
+    'django.contrib.messages',
+    'django.contrib.staticfiles',
+    'ckeditor',
+    'core',
+]
+
+MIDDLEWARE = [
+    'django.middleware.security.SecurityMiddleware',
+    'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.common.CommonMiddleware',
+    'django.middleware.csrf.CsrfViewMiddleware',
+    'django.contrib.auth.middleware.AuthenticationMiddleware',
+    'django.contrib.messages.middleware.MessageMiddleware',
+    'django.middleware.clickjacking.XFrameOptionsMiddleware',
+]
+
+ROOT_URLCONF = 'gestion_flujos.urls'
+
+TEMPLATES = [
+    {
+        'BACKEND': 'django.template.backends.django.DjangoTemplates',
+        'DIRS': [BASE_DIR / 'templates'],
+        'APP_DIRS': True,
+        'OPTIONS': {
+            'context_processors': [
+                'django.template.context_processors.debug',
+                'django.template.context_processors.request',
+                'django.contrib.auth.context_processors.auth',
+                'django.contrib.messages.context_processors.messages',
+            ],
+        },
+    },
+]
+
+WSGI_APPLICATION = 'gestion_flujos.wsgi.application'
+
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': BASE_DIR / 'db.sqlite3',
+    }
+}
+
+AUTH_PASSWORD_VALIDATORS = [
+    {'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator'},
+    {'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator'},
+]
+
+LANGUAGE_CODE = 'es-es'
+TIME_ZONE = 'America/Mexico_City'
+USE_I18N = True
+USE_TZ = True
+
+STATIC_URL = 'static/'
+STATICFILES_DIRS = [BASE_DIR / 'static']
+STATIC_ROOT = BASE_DIR / 'staticfiles'
+
+MEDIA_URL = '/media/'
+MEDIA_ROOT = BASE_DIR / 'media'
+
+DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+
+LOGIN_URL = '/accounts/login/'
+LOGIN_REDIRECT_URL = '/'
+LOGOUT_REDIRECT_URL = '/'
+
+
+# Configuración de CKEditor (django-ckeditor)
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'full',
+        'height': 300,
+        'width': '100%',
+        'extraPlugins': 'codesnippet',
+        'codeSnippet_theme': 'monokai_sublime',
+    },
+}
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/gestion_flujos/__init__.py
+########################################
+
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/script.py
+########################################
+
+# Script para crear el proceso PROS-DES-09 (Checklist antes de pull request)
+from core.models import Area, Proceso, Paso
+from django.utils import timezone
+
+def crear_proceso_pros_des_09():
+    # 1. Obtener o crear el área 'Desarrollo'
+    area, _ = Area.objects.get_or_create(
+        nombre='Desarrollo',
+        defaults={
+            'descripcion': 'Área encargada del desarrollo y mantenimiento de software.',
+            'minimo_requerido': 80
+        }
+    )
+    print(f"✅ Área: {area.nombre}")
+
+    nombre_proceso = "PROS-DES-09 Proceso para realizar checklist antes de hacer pull request"
+    if Proceso.objects.filter(nombre=nombre_proceso).exists():
+        print(f"⚠️ El proceso ya existe. No se creará duplicado.")
+        return
+
+    # 2. Crear el proceso
+    proceso = Proceso.objects.create(
+        nombre=nombre_proceso,
+        area=area,
+        objetivo="Tener 0 errores postproducción por cada deploy que se haga.",
+        video_ayuda="https://wisphubmx.sharepoint.com/sites/WispHub/_layouts/15/stream.aspx?id=%2Fsites%2FWispHub%2FProcesos%2FDesarrollo%2FPROS%2DDES%2D09%20Proceso%20para%20realizar%20checklist%20antes%20de%20hacer%20pull%20request%2Emp4",
+        nivel_critico='alta',
+        tiempo_estimado=120,
+        activo=True
+    )
+    print(f"✅ Proceso creado: {proceso.nombre}")
+
+    # 3. Datos de los pasos (orden, nombre, descripcion_corta, ayuda_html, puntos, evidencia_tipo)
+    pasos_data = [
+        {
+            "orden": 1,
+            "nombre": "PASO 1: Crear issue en github. (Entregable)",
+            "descripcion": "Crear un issue en GitHub con el formato PROS-DES-09 - {{Nombre del programador}}.",
+            "ayuda_html": """<p><strong>Paso 1.1:</strong> Buscar issues relacionados con la siguiente consulta:</p>
+<p><a href="https://github.com/desarrollowh/operacion-wisphub/issues?q=PROS-DES-09%20Proceso%20para%20realizar%20checklist%20antes%20de%20hacer%20pull%20request">https://github.com/desarrollowh/operacion-wisphub/issues?q=PROS-DES-09...</a></p>
+<p><strong>Paso 1.2:</strong> Crear issue con el título: <code>PROS-DES-09 Proceso para realizar checklist antes de hacer pull request - {{Nombre del programador}}</code></p>
+<p><strong>Entregable:</strong> Link al issue creado.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 2,
+            "nombre": "PASO 2: Aplicar migraciones. (Programador) - (Evidencia con foto)",
+            "descripcion": "Ejecutar makemigrations y migrate, y adjuntar captura de pantalla.",
+            "ayuda_html": """<p>Comandos a ejecutar:</p>
+<pre>python manage.py makemigrations<br>python manage.py migrate</pre>
+<p><strong>NOTA:</strong> Adjuntar captura de evidencia mostrando la salida de los comandos.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 3,
+            "nombre": "PASO 3: Documentar Codigo. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Documentar funciones, clases o métodos con docstrings claros.",
+            "ayuda_html": """<p>Explicar qué hace la pieza de código. Usar docstrings con formato:</p>
+<pre>def convertir_tiempo_mikrotik(tiempo):
+    \"\"\"
+    Esta función recibe el tiempo que mikrotik devuelve (1w15h35m16s) y lo formatea como 00d 00:00:00
+    \"\"\"
+    pass</pre>
+<p>Para views, utils y tasks, explicar resumidamente el funcionamiento y las variables.</p>
+<p><strong>NOTA:</strong> Adjuntar captura del código documentado (si aplica).</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 4,
+            "nombre": "PASO 4: Utilizar el cache correctamente. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Centralizar el acceso a caché en una función específica por módulo.",
+            "ayuda_html": """<p>Ejemplo de archivo <code>cache_factura.py</code>:</p>
+<pre>def get_cache_facturas(empresa_slug, get_data=True):
+    key = 'facturas-v3-' + empresa_slug
+    if get_data:
+        cache_facturas = cache.get(key)
+        return key, cache_facturas if cache_facturas else {}
+    return key</pre>
+<p><strong>NOTA:</strong> Adjuntar captura del código donde se implementa.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 5,
+            "nombre": "PASO 5: Validar desde el Form. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Realizar validaciones en el formulario (clean_*) en lugar de la vista.",
+            "ayuda_html": """<p>Usar métodos <code>clean_&lt;campo&gt;</code> en los formularios para mantener la vista limpia.</p>
+<p><strong>NOTA:</strong> Adjuntar captura del código del formulario.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 6,
+            "nombre": "PASO 6: Evitar usar 'exclude' en los formularios. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Usar 'fields' en ModelForm en lugar de 'exclude'.",
+            "ayuda_html": """<p>Ejemplo:</p>
+<pre>class ExampleForm(forms.ModelForm):
+    class Meta:
+        model = Example
+        fields = ['first', 'second']</pre>
+<p><strong>NOTA:</strong> Adjuntar captura del formulario corregido.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 7,
+            "nombre": "PASO 7: Revisar el numero de querys. (Programador) - (Evidencia con foto de django toolbar)",
+            "descripcion": "Medir número de consultas usando Django Debug Toolbar o el logger incluido.",
+            "ayuda_html": """<p>En vistas usar Django Debug Toolbar. Para tareas, usar el siguiente código:</p>
+<pre>from django.db import connection
+del connection.queries[:]
+
+query_count = {"total": 0}
+
+class QueryCounterHandler(logging.Handler):
+    def emit(self, record):
+        query_count["total"] += 1
+
+logger = logging.getLogger("django.db.backends")
+logger.addHandler(QueryCounterHandler())
+logger.setLevel(logging.DEBUG)
+
+# ... tu código ...
+
+print("Consultas ejecutadas:", query_count["total"])</pre>
+<p><strong>NOTA:</strong> Adjuntar captura del resultado.</p>""",
+            "puntos": 15,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 8,
+            "nombre": "PASO 8: Pruebas con más de 1000 registros. (Programador) - (Evidencia con foto de django toolbar)",
+            "descripcion": "Probar listados con 100, 1000, 2000 y 3000 registros y verificar tiempo/respuesta.",
+            "ayuda_html": """<p>Generar datos de prueba y medir con Django Debug Toolbar. Capturar el número de consultas y el tiempo de carga.</p>
+<p><strong>NOTA:</strong> Adjuntar captura para cada prueba (o al menos la de 3000 registros).</p>""",
+            "puntos": 15,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 9,
+            "nombre": "PASO 9: Usar defer y only en las querys. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Optimizar consultas usando only() o defer() para traer solo campos necesarios.",
+            "ayuda_html": """<p>Ejemplos:</p>
+<pre># only: solo ciertos campos
+usuarios = Usuario.objects.only('id', 'nombre')
+
+# defer: excluir campos pesados
+facturas = Factura.objects.defer('xml_factura')</pre>
+<p><strong>NOTA:</strong> Adjuntar captura del código optimizado.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 10,
+            "nombre": "PASO 10: Nombrar variables y funciones explícitamente. (Programador) - (Evidencia con foto)",
+            "descripcion": "Usar nombres claros, sin abreviaturas ni letras sueltas.",
+            "ayuda_html": """<p>Buenas prácticas:</p>
+<ul>
+<li>Evitar nombres como <code>aux</code>, <code>tmp</code>, <code>i</code> (excepto en bucles cortos).</li>
+<li>Usar verbos en funciones: <code>calcular_total()</code>, <code>obtener_usuario()</code>.</li>
+<li>Variables descriptivas: <code>lista_usuarios</code> en lugar de <code>l</code>.</li>
+</ul>
+<p><strong>NOTA:</strong> Adjuntar captura de una parte del código donde se aplique.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 11,
+            "nombre": "PASO 11: Task para API RouterOS y cerrar conexión. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Implementar tarea para consultar RouterOS, capturar excepciones y cerrar conexión.",
+            "ayuda_html": """<p>Estructura recomendada:</p>
+<pre>@shared_task(queue="trafico_mk", time_limit=180)
+def get_trafico_task(slug_empresa, ...):
+    connection = routeros.connect(...)
+    try:
+        # consultas
+        return resultado
+    except RouterOsApiConnectionError as e:
+        # manejo
+    except RouterOsApiCommunicationError as e:
+        # manejo
+    finally:
+        connection.disconnect()</pre>
+<p><strong>NOTA:</strong> Adjuntar captura del código del task.</p>""",
+            "puntos": 15,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 12,
+            "nombre": "PASO 12: Usar try-except correctamente. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Capturar excepciones específicas, no genéricas.",
+            "ayuda_html": """<p>Ejemplo correcto:</p>
+<pre>try:
+    archivo = open('datos.txt')
+except FileNotFoundError as e:
+    print("Archivo no encontrado")</pre>
+<p>Evitar:</p>
+<pre>try:
+    ...
+except:
+    pass</pre>
+<p><strong>NOTA:</strong> Adjuntar captura de código donde se aplique.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 13,
+            "nombre": "PASO 13: Timeouts y excepciones en APIs. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Agregar timeout a peticiones a APIs y capturar ConnectTimeout y ConnectionError.",
+            "ayuda_html": """<p>Ejemplo con <code>requests</code>:</p>
+<pre>try:
+    response = requests.post(url, data=params, timeout=4)
+except requests.ConnectTimeout:
+    # manejo
+except requests.exceptions.ConnectionError:
+    # manejo</pre>
+<p>En WispHub se puede usar <code>EXCEPCIONES_CONEXION_ENDPOINT</code>.</p>
+<p><strong>NOTA:</strong> Adjuntar captura de código.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 14,
+            "nombre": "PASO 14: Verificar TOOLTIP y botón AYUDA. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Agregar tooltips en elementos no intuitivos y completar el botón de ayuda con información.",
+            "ayuda_html": """<p>Si el desarrollo añade nuevas funcionalidades que puedan resultar confusas, incluir tooltips (<code>title</code> o librería) y actualizar el contenido del botón de ayuda con una ventana modal que explique el paso.</p>
+<p><strong>NOTA:</strong> Adjuntar captura del tooltip y del modal de ayuda.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 15,
+            "nombre": "PASO 15: Mensajes claros en pasarelas de pago, SMS, facturación. (Programador) - (Evidencia con foto si aplica)",
+            "descripcion": "Mostrar contacto de la pasarela ante errores externos.",
+            "ayuda_html": """<p>Ejemplo de mensaje amigable:</p>
+<blockquote>No se pudo procesar el pago en este momento. Por favor, contacta a soporte de la pasarela (teléfono: 800-123-4567) o intenta más tarde.</blockquote>
+<p><strong>NOTA:</strong> Adjuntar captura del mensaje mostrado al usuario.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 16,
+            "nombre": "PASO 16: Comparar código con Sublime Merge. (Programador) - (Evidencia)",
+            "descripcion": "Revisar diferencias con la rama base usando una herramienta de diff.",
+            "ayuda_html": """<p>Utilizar Sublime Merge, PyCharm Diff o <code>git diff</code> para asegurar que no se incluyen prints, código de prueba o cambios no deseados.</p>
+<p><strong>NOTA:</strong> Adjuntar captura de la comparación mostrando solo los cambios relevantes.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 17,
+            "nombre": "PASO 17: Ejecutar pruebas unitarias exitosas. (Programador) - (Evidencia con foto)",
+            "descripcion": "Ejecutar `python manage.py test` y verificar que todas pasen.",
+            "ayuda_html": """<p>Comando: <code>python manage.py test</code></p>
+<p>Debe mostrar <code>OK</code> o <code>Ran X tests ... OK</code>.</p>
+<p><strong>NOTA:</strong> Adjuntar captura del resultado.</p>""",
+            "puntos": 15,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 18,
+            "nombre": "PASO 18: Probar en local y servidor de pruebas. (Programador) - (Evidencia con foto)",
+            "descripcion": "Probar el cambio en entorno local y en uno de los servidores de pruebas.",
+            "ayuda_html": """<p>Servidores de pruebas disponibles:</p>
+<ul>
+<li><a href="https://nyc.wisphub.net/">https://nyc.wisphub.net/</a></li>
+<li><a href="https://server4.wisphub.io/">https://server4.wisphub.io/</a></li>
+</ul>
+<p>Aplicar migraciones y collectstatic, verificar que no haya errores.</p>
+<p><strong>NOTA:</strong> Adjuntar captura de la prueba funcionando en el servidor.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 19,
+            "nombre": "PASO 19: Crear ticket para pruebas en local. (Scrum master) - (Evidencia con foto)",
+            "descripcion": "Si el issue tiene entre 4 y 14 horas, probar con alguien de ventas; si >14h, con 2 de soporte y 2 de ventas.",
+            "ayuda_html": """<p>Crear ticket en el sistema de seguimiento asignando el tiempo de prueba correspondiente (20min o 40min).</p>
+<p><strong>NOTA:</strong> Adjuntar captura del ticket creado.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 20,
+            "nombre": "PASO 20: Documentar antes de subir o en producción? (Programador)",
+            "descripcion": "La documentación debe estar completa antes del despliegue a producción.",
+            "ayuda_html": """<p>Documentar en el código (docstrings) y/o en la wiki interna para que el equipo de soporte pueda responder preguntas de clientes.</p>
+<p><strong>NOTA:</strong> No requiere evidencia específica.</p>""",
+            "puntos": 5,
+            "evidencia_tipo": "ninguna"
+        },
+        {
+            "orden": 21,
+            "nombre": "PASO 21: Anotar workers a reiniciar. (Programador) - (Evidencia con foto)",
+            "descripcion": "Identificar qué workers (Lote A, B o C) deben reiniciarse y notificarlo al líder.",
+            "ayuda_html": """<p>Consultar el mapa de servidores:</p>
+<ul>
+<li><a href="https://wisphub.net/documentacion-staff/articulo/mapa-de-servidores-1-1/#lotea">Lote A</a></li>
+<li><a href="https://wisphub.net/documentacion-staff/articulo/mapa-de-servidores-2-2/#loteb">Lote B</a></li>
+<li><a href="https://wisphub.net/documentacion-staff/articulo/mapa-de-servidores-lote-3-210/">Lote C</a></li>
+</ul>
+<p><strong>NOTA:</strong> Adjuntar captura del comentario donde se especifica qué workers reiniciar.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 22,
+            "nombre": "PASO 22: Anotar migraciones necesarias. (Programador) - (Evidencia con foto)",
+            "descripcion": "Si se hicieron migraciones en modelos críticos, indicar tiempo estimado y mejor hora.",
+            "ayuda_html": """<p>Ejemplo: "Migración en modelo Factura, tiempo estimado 5 minutos. Programar para las 7 AM o 8 PM."</p>
+<p><strong>NOTA:</strong> Adjuntar captura del comentario.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 23,
+            "nombre": "PASO 23: Anotar si se necesita collectstatic. (Programador) - (Evidencia con foto)",
+            "descripcion": "Indicar si el cambio requiere ejecutar collectstatic.",
+            "ayuda_html": """<p>Si se agregaron o modificaron archivos estáticos (CSS, JS, imágenes), es necesario correr <code>python manage.py collectstatic</code>. Notificarlo al líder.</p>
+<p><strong>NOTA:</strong> Adjuntar captura del comentario.</p>""",
+            "puntos": 5,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 24,
+            "nombre": "PASO 24: Comparar código con líder de proyecto. (Líder y Programador)",
+            "descripcion": "Revisión de código en pareja antes del push.",
+            "ayuda_html": """<p>Utilizar herramienta de diff (Sublime Merge, PyCharm, VS Code) para comparar los cambios con la rama base. El líder debe aprobar visualmente.</p>
+<p><strong>NOTA:</strong> Adjuntar captura de la revisión.</p>""",
+            "puntos": 10,
+            "evidencia_tipo": "fotografica"
+        },
+        {
+            "orden": 25,
+            "nombre": "PASO 25: Comprobar último cambio al hacer merge. (Programador) - (Evidencia con foto)",
+            "descripcion": "Asegurar que la rama está actualizada antes del merge.",
+            "ayuda_html": """<p>Ejecutar <code>git pull origin main</code> (o rama base) y resolver conflictos si los hay. Luego realizar el merge y adjuntar captura del merge exitoso.</p>
+<p><strong>NOTA:</strong> Adjuntar captura del merge realizado.</p>""",
+            "puntos": 5,
+            "evidencia_tipo": "fotografica"
+        }
+    ]
+
+    # 4. Crear los pasos
+    for data in pasos_data:
+        paso, created = Paso.objects.get_or_create(
+            proceso=proceso,
+            orden=data["orden"],
+            defaults={
+                "nombre": data["nombre"],
+                "descripcion": data["descripcion"],
+                "tipo": "normal",
+                "puntos": data["puntos"],
+                "ayuda_html": data["ayuda_html"],
+                "evidencia_tipo": data["evidencia_tipo"],
+                "nivel_critico": "media"
+            }
+        )
+        if created:
+            print(f"   ✅ Paso {data['orden']}: {data['nombre']}")
+        else:
+            print(f"   ⚠️ Paso {data['orden']} ya existía, no se modificó.")
+
+    print(f"\n🎉 Proceso '{nombre_proceso}' creado exitosamente con {len(pasos_data)} pasos.")
+
+# Ejecutar la función
+crear_proceso_pros_des_09()
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/apps.py
+########################################
+
+from django.apps import AppConfig
+
+class CoreConfig(AppConfig):
+    default_auto_field = 'django.db.models.BigAutoField'
+    name = 'core'
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/views.py
+########################################
+
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib.auth.decorators import login_required, user_passes_test
+from django.contrib.auth import authenticate, login as auth_login
+from django.contrib.auth.models import User
+from django.contrib import messages
+from django.core.paginator import Paginator
+from django.db.models import Q
+from django.http import JsonResponse
+from django.urls import reverse
+from django.utils import timezone
+from .models import *
+from .forms import *
+
+# ---------- Helpers de permisos ----------
+def es_admin(user):
+    return hasattr(user, 'staff_profile') and user.staff_profile.rol == 'admin'
+
+def puede_gestionar_staff(user):
+    return es_admin(user) or (hasattr(user, 'staff_profile') and user.staff_profile.puede_gestionar_staff)
+
+def puede_gestionar_areas(user):
+    return es_admin(user) or (hasattr(user, 'staff_profile') and user.staff_profile.puede_gestionar_areas)
+
+def puede_gestionar_procesos(user):
+    return es_admin(user) or (hasattr(user, 'staff_profile') and user.staff_profile.puede_gestionar_procesos)
+
+def puede_gestionar_pasos(user):
+    return es_admin(user) or (hasattr(user, 'staff_profile') and user.staff_profile.puede_gestionar_pasos)
+
+def puede_supervisar(user):
+    return es_admin(user) or (hasattr(user, 'staff_profile') and (user.staff_profile.puede_supervisar or user.staff_profile.rol in ['supervisor','auditor']))
+
+# ---------- VISTAS DE STAFF (MOD-1) ----------
+@login_required
+@user_passes_test(puede_gestionar_staff)
+def staff_crear(request):
+    if request.method == 'POST':
+        form = StaffForm(request.POST)
+        if form.is_valid():
+            username = form.cleaned_data['username']
+            first_name = form.cleaned_data['first_name']
+            last_name = form.cleaned_data['last_name']
+            password = form.cleaned_data['password']
+            if User.objects.filter(username=username).exists():
+                messages.error(request, 'El nombre de usuario ya existe')
+            else:
+                user = User.objects.create_user(username=username, password=password, first_name=first_name, last_name=last_name)
+                staff = form.save(commit=False)
+                staff.user = user
+                staff.save()
+                form.save_m2m()
+                messages.success(request, 'Staff creado correctamente')
+                return redirect('staff_dashboard')
+    else:
+        form = StaffForm()
+    return render(request, 'core/staff_form.html', {'form': form, 'titulo': 'Crear Staff'})
+
+@login_required
+@user_passes_test(puede_gestionar_staff)
+def staff_dashboard(request):
+    q = request.GET.get('q', '')
+    area_id = request.GET.get('area', '')
+    rol = request.GET.get('rol', '')
+    staff_list = StaffProfile.objects.select_related('user', 'area_asignada').all()
+    if q:
+        staff_list = staff_list.filter(Q(user__first_name__icontains=q) | Q(user__last_name__icontains=q) | Q(user__username__icontains=q))
+    if area_id:
+        staff_list = staff_list.filter(area_asignada_id=area_id)
+    if rol:
+        staff_list = staff_list.filter(rol=rol)
+    paginator = Paginator(staff_list, 10)
+    page = request.GET.get('page')
+    staff_page = paginator.get_page(page)
+    areas = Area.objects.all()
+    roles = ROLES
+    return render(request, 'core/staff_dashboard.html', {'staff_list': staff_page, 'areas': areas, 'roles': roles, 'filtros': {'q': q, 'area': area_id, 'rol': rol}})
+
+@login_required
+@user_passes_test(puede_gestionar_staff)
+def staff_editar(request, pk):
+    staff = get_object_or_404(StaffProfile, pk=pk)
+    if request.method == 'POST':
+        form = StaffForm(request.POST, instance=staff)
+        if form.is_valid():
+            user = staff.user
+            user.username = form.cleaned_data['username']
+            user.first_name = form.cleaned_data['first_name']
+            user.last_name = form.cleaned_data['last_name']
+            if form.cleaned_data['password']:
+                user.set_password(form.cleaned_data['password'])
+            user.save()
+            form.save()
+            messages.success(request, 'Staff actualizado')
+            return redirect('staff_dashboard')
+    else:
+        form = StaffForm(instance=staff)
+    return render(request, 'core/staff_form.html', {'form': form, 'titulo': 'Editar Staff'})
+
+@login_required
+@user_passes_test(puede_gestionar_staff)
+def staff_eliminar(request, pk):
+    staff = get_object_or_404(StaffProfile, pk=pk)
+    if request.method == 'POST':
+        staff.user.delete()
+        staff.delete()
+        messages.success(request, 'Staff eliminado')
+        return redirect('staff_dashboard')
+    return render(request, 'core/confirm_delete.html', {'object': staff, 'tipo': 'Staff', 'cancel_url': 'staff_dashboard'})
+
+# ---------- VISTAS DE ÁREAS (MOD-2) ----------
+@login_required
+@user_passes_test(puede_gestionar_areas)
+def area_crear(request):
+    if request.method == 'POST':
+        form = AreaForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Área creada')
+            return redirect('area_dashboard')
+    else:
+        form = AreaForm()
+    return render(request, 'core/area_form.html', {'form': form, 'titulo': 'Crear Área'})
+
+@login_required
+@user_passes_test(puede_gestionar_areas)
+def area_dashboard(request):
+    q = request.GET.get('q', '')
+    responsable_id = request.GET.get('responsable', '')
+    areas = Area.objects.select_related('responsable').all()
+    if q:
+        areas = areas.filter(nombre__icontains=q)
+    if responsable_id:
+        areas = areas.filter(responsable_id=responsable_id)
+    paginator = Paginator(areas, 10)
+    page = request.GET.get('page')
+    areas_page = paginator.get_page(page)
+    responsables = StaffProfile.objects.filter(rol='supervisor')
+    return render(request, 'core/area_dashboard.html', {'areas': areas_page, 'responsables': responsables, 'filtros': {'q': q, 'responsable': responsable_id}})
+
+@login_required
+@user_passes_test(puede_gestionar_areas)
+def area_editar(request, pk):
+    area = get_object_or_404(Area, pk=pk)
+    if request.method == 'POST':
+        form = AreaForm(request.POST, instance=area)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Área actualizada')
+            return redirect('area_dashboard')
+    else:
+        form = AreaForm(instance=area)
+    return render(request, 'core/area_form.html', {'form': form, 'titulo': 'Editar Área'})
+
+@login_required
+@user_passes_test(puede_gestionar_areas)
+def area_eliminar(request, pk):
+    area = get_object_or_404(Area, pk=pk)
+    if request.method == 'POST':
+        area.delete()
+        messages.success(request, 'Área eliminada')
+        return redirect('area_dashboard')
+    return render(request, 'core/confirm_delete.html', {'object': area, 'tipo': 'Área', 'cancel_url': 'area_dashboard'})
+
+# ---------- VISTAS DE PROCESOS (MOD-3) ----------
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def proceso_crear(request):
+    if request.method == 'POST':
+        form = ProcesoForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Proceso creado')
+            return redirect('dashboard_procesos')
+    else:
+        form = ProcesoForm()
+    return render(request, 'core/proceso_form.html', {'form': form, 'titulo': 'Crear Proceso'})
+
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def dashboard_procesos(request):
+    q = request.GET.get('q', '')
+    area_id = request.GET.get('area', '')
+    procesos = Proceso.objects.select_related('area').all()
+    if q:
+        procesos = procesos.filter(nombre__icontains=q)
+    if area_id:
+        procesos = procesos.filter(area_id=area_id)
+    paginator = Paginator(procesos, 10)
+    page = request.GET.get('page')
+    procesos_page = paginator.get_page(page)
+    areas = Area.objects.all()
+    return render(request, 'core/proceso_dashboard.html', {'procesos': procesos_page, 'areas': areas, 'filtros': {'q': q, 'area': area_id}})
+
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def proceso_editar(request, pk):
+    proceso = get_object_or_404(Proceso, pk=pk)
+    if request.method == 'POST':
+        form = ProcesoForm(request.POST, instance=proceso)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Proceso actualizado')
+            return redirect('dashboard_procesos')
+    else:
+        form = ProcesoForm(instance=proceso)
+    return render(request, 'core/proceso_form.html', {'form': form, 'titulo': 'Editar Proceso'})
+
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def proceso_eliminar(request, pk):
+    proceso = get_object_or_404(Proceso, pk=pk)
+    if request.method == 'POST':
+        proceso.delete()
+        messages.success(request, 'Proceso eliminado')
+        return redirect('dashboard_procesos')
+    return render(request, 'core/confirm_delete.html', {'object': proceso, 'tipo': 'Proceso', 'cancel_url': 'dashboard_procesos'})
+
+@login_required
+def proceso_visualizar(request, pk):
+    proceso = get_object_or_404(Proceso, pk=pk)
+    pasos = proceso.pasos.all()
+    nombre_paso = request.GET.get('nombre_paso', '')
+    tipo_paso = request.GET.get('tipo_paso', '')
+    if nombre_paso:
+        pasos = pasos.filter(nombre__icontains=nombre_paso)
+    if tipo_paso:
+        pasos = pasos.filter(tipo=tipo_paso)
+    paginator = Paginator(pasos, 10)
+    page = request.GET.get('page')
+    pasos_page = paginator.get_page(page)
+    return render(request, 'core/proceso_detalle.html', {'proceso': proceso, 'pasos': pasos_page, 'filtros': {'nombre_paso': nombre_paso, 'tipo_paso': tipo_paso}})
+
+# ---------- VISTAS DE PASOS ----------
+@login_required
+@user_passes_test(puede_gestionar_pasos)
+def paso_crear(request, proceso_pk):
+    proceso = get_object_or_404(Proceso, pk=proceso_pk)
+    if request.method == 'POST':
+        form = PasoForm(request.POST, proceso_id=proceso.pk)
+        if form.is_valid():
+            paso = form.save(commit=False)
+            paso.proceso = proceso
+            paso.save()
+            messages.success(request, 'Paso creado correctamente')
+            return redirect('proceso_visualizar', pk=proceso.pk)
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'Error en {field}: {error}')
+    else:
+        form = PasoForm(proceso_id=proceso.pk)
+    return render(request, 'core/paso_form.html', {'form': form, 'proceso': proceso, 'titulo': 'Crear Paso'})
+
+@login_required
+@user_passes_test(puede_gestionar_pasos)
+def paso_editar(request, proceso_pk, paso_pk):
+    proceso = get_object_or_404(Proceso, pk=proceso_pk)
+    paso = get_object_or_404(Paso, pk=paso_pk, proceso=proceso)
+    if request.method == 'POST':
+        form = PasoForm(request.POST, instance=paso, proceso_id=proceso.pk)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Paso actualizado')
+            return redirect('proceso_visualizar', pk=proceso.pk)
+    else:
+        form = PasoForm(instance=paso, proceso_id=proceso.pk)
+    return render(request, 'core/paso_form.html', {'form': form, 'proceso': proceso, 'titulo': 'Editar Paso'})
+
+@login_required
+@user_passes_test(puede_gestionar_pasos)
+def paso_eliminar(request, proceso_pk, paso_pk):
+    proceso = get_object_or_404(Proceso, pk=proceso_pk)
+    paso = get_object_or_404(Paso, pk=paso_pk, proceso=proceso)
+    if request.method == 'POST':
+        paso.delete()
+        messages.success(request, 'Paso eliminado')
+        return redirect('proceso_visualizar', pk=proceso.pk)
+    return render(request, 'core/confirm_delete.html', {'object': paso, 'tipo': 'Paso', 'cancel_url': reverse('proceso_visualizar', args=[proceso.pk])})
+
+# ---------- CATÁLOGO Y EJECUCIÓN ----------
+@login_required
+def catalogo_procesos(request):
+    q = request.GET.get('q', '')
+    staff = request.user.staff_profile
+    if staff.rol == 'operador':
+        procesos = staff.procesos_asignados.filter(activo=True)
+    else:
+        procesos = Proceso.objects.filter(activo=True)
+    if q:
+        procesos = procesos.filter(nombre__icontains=q)
+    paginator = Paginator(procesos, 10)
+    page = request.GET.get('page')
+    procesos_page = paginator.get_page(page)
+    return render(request, 'core/catalogo_procesos.html', {'procesos': procesos_page, 'filtros': {'q': q}})
+
+@login_required
+def ejecutar_proceso(request, proceso_pk):
+    proceso = get_object_or_404(Proceso, pk=proceso_pk, activo=True)
+    ejecucion, created = EjecucionProceso.objects.get_or_create(
+        proceso=proceso,
+        usuario=request.user.staff_profile,
+        estado='en_progreso',
+        defaults={'puntos_totales': sum(p.puntos for p in proceso.pasos.all())}
+    )
+    pasos_ejecutados_ids = ejecucion.pasos_ejecutados.filter(estado='completado').values_list('paso_id', flat=True)
+    siguiente_paso = proceso.pasos.exclude(id__in=pasos_ejecutados_ids).first()
+    
+    if not siguiente_paso:
+        ejecucion.estado = 'completado'
+        ejecucion.fecha_fin = timezone.now()
+        ejecucion.save()
+        return redirect('rendimiento_procesos')
+    
+    if request.method == 'POST' and 'respuesta_condicion' in request.POST:
+        respuesta = request.POST.get('respuesta_condicion') == 'si'
+        ejec_paso, _ = EjecucionPaso.objects.get_or_create(ejecucion=ejecucion, paso=siguiente_paso)
+        ejec_paso.estado = 'completado'
+        ejec_paso.respuesta_condicion = respuesta
+        ejec_paso.fecha_completado = timezone.now()
+        ejec_paso.tiempo_fin = timezone.now()
+        # Guardar evidencias
+        if 'evidencia_fotografica' in request.FILES:
+            ejec_paso.evidencia_fotografica = request.FILES['evidencia_fotografica']
+        if 'evidencia_descriptiva' in request.POST:
+            ejec_paso.evidencia_descriptiva = request.POST['evidencia_descriptiva']
+        ejec_paso.save()
+        if respuesta:
+            ejecucion.puntos_obtenidos += siguiente_paso.puntos
+        # Lógica de saltos condicionales
+        if respuesta and siguiente_paso.paso_si:
+            pasos_intermedios = proceso.pasos.filter(orden__gt=siguiente_paso.orden, orden__lt=siguiente_paso.paso_si.orden)
+            for p in pasos_intermedios:
+                EjecucionPaso.objects.get_or_create(ejecucion=ejecucion, paso=p, defaults={'estado': 'saltado'})
+        elif not respuesta and siguiente_paso.paso_no:
+            pasos_intermedios = proceso.pasos.filter(orden__gt=siguiente_paso.orden, orden__lt=siguiente_paso.paso_no.orden)
+            for p in pasos_intermedios:
+                EjecucionPaso.objects.get_or_create(ejecucion=ejecucion, paso=p, defaults={'estado': 'saltado'})
+        ejecucion.save()
+        return redirect('ejecutar_proceso', proceso_pk=proceso.pk)
+    
+    return render(request, 'core/ejecutar_paso.html', {
+        'proceso': proceso,
+        'paso': siguiente_paso,
+        'ejecucion': ejecucion,
+        'evidencia_tipo': siguiente_paso.evidencia_tipo,
+    })
+
+# ---------- RENDIMIENTO (MOD-5) ----------
+@login_required
+def rendimiento_procesos(request):
+    ejecuciones = EjecucionProceso.objects.filter(usuario=request.user.staff_profile).order_by('-fecha_inicio')
+    fecha = request.GET.get('fecha', '')
+    estado = request.GET.get('estado', '')
+    if fecha:
+        ejecuciones = ejecuciones.filter(fecha_inicio__date=fecha)
+    if estado:
+        ejecuciones = ejecuciones.filter(estado=estado)
+    paginator = Paginator(ejecuciones, 10)
+    page = request.GET.get('page')
+    ejecuciones_page = paginator.get_page(page)
+    return render(request, 'core/rendimiento.html', {'ejecuciones': ejecuciones_page, 'filtros': {'fecha': fecha, 'estado': estado}})
+
+@login_required
+def detalle_mi_rendimiento(request, ejecucion_pk):
+    ejecucion = get_object_or_404(EjecucionProceso, pk=ejecucion_pk, usuario=request.user.staff_profile)
+    pasos = ejecucion.pasos_ejecutados.all().select_related('paso')
+    return render(request, 'core/detalle_rendimiento.html', {'ejecucion': ejecucion, 'pasos': pasos})
+
+@login_required
+def rendimiento_equipo(request):
+    if not puede_supervisar(request.user):
+        messages.error(request, 'No tienes permiso para ver el rendimiento del equipo')
+        return redirect('rendimiento_procesos')
+    staff = request.user.staff_profile
+    equipo_ids = staff.equipo_a_cargo.values_list('id', flat=True)
+    ejecuciones = EjecucionProceso.objects.filter(usuario_id__in=equipo_ids).order_by('-fecha_inicio')
+    fecha = request.GET.get('fecha', '')
+    estado = request.GET.get('estado', '')
+    usuario_id = request.GET.get('usuario', '')
+    if fecha:
+        ejecuciones = ejecuciones.filter(fecha_inicio__date=fecha)
+    if estado:
+        ejecuciones = ejecuciones.filter(estado=estado)
+    if usuario_id:
+        ejecuciones = ejecuciones.filter(usuario_id=usuario_id)
+    paginator = Paginator(ejecuciones, 10)
+    page = request.GET.get('page')
+    ejecuciones_page = paginator.get_page(page)
+    usuarios = StaffProfile.objects.filter(id__in=equipo_ids)
+    return render(request, 'core/rendimiento_equipo.html', {'ejecuciones': ejecuciones_page, 'usuarios': usuarios, 'filtros': {'fecha': fecha, 'estado': estado, 'usuario': usuario_id}})
+
+@login_required
+def detalle_rendimiento_equipo(request, ejecucion_pk):
+    ejecucion = get_object_or_404(EjecucionProceso, pk=ejecucion_pk)
+    # Verificar que el usuario logueado tenga a cargo al dueño de la ejecución
+    if not puede_supervisar(request.user) and request.user.staff_profile != ejecucion.usuario:
+        messages.error(request, 'No tienes permiso para ver esta ejecución')
+        return redirect('rendimiento_equipo')
+    pasos = ejecucion.pasos_ejecutados.all().select_related('paso')
+    return render(request, 'core/detalle_rendimiento_equipo.html', {'ejecucion': ejecucion, 'pasos': pasos})
+
+# ---------- SUPERVISIÓN (MOD-7) ----------
+@login_required
+@user_passes_test(puede_supervisar)
+def supervision_dashboard(request):
+    # Procesos que están en estado 'completado' o 'en_progreso' y pendientes de supervisión
+    # o que ya tienen supervisión pero no finalizada
+    staff = request.user.staff_profile
+    equipo_ids = staff.equipo_a_cargo.values_list('id', flat=True)
+    supervisiones = EjecucionProceso.objects.filter(usuario_id__in=equipo_ids, estado__in=['completado', 'en_progreso']).exclude(estado_supervision='aprobado').order_by('-fecha_inicio')
+    usuario = request.GET.get('usuario', '')
+    proceso = request.GET.get('proceso', '')
+    estado_sup = request.GET.get('estado_sup', '')
+    if usuario:
+        supervisiones = supervisiones.filter(usuario_id=usuario)
+    if proceso:
+        supervisiones = supervisiones.filter(proceso_id=proceso)
+    if estado_sup:
+        supervisiones = supervisiones.filter(estado_supervision=estado_sup)
+    paginator = Paginator(supervisiones, 10)
+    page = request.GET.get('page')
+    supervisiones_page = paginator.get_page(page)
+    usuarios = StaffProfile.objects.filter(id__in=equipo_ids)
+    procesos_list = Proceso.objects.filter(id__in=supervisiones.values_list('proceso_id', flat=True))
+    return render(request, 'core/supervision_dashboard.html', {
+        'supervisiones': supervisiones_page,
+        'usuarios': usuarios,
+        'procesos': procesos_list,
+        'filtros': {'usuario': usuario, 'proceso': proceso, 'estado_sup': estado_sup}
+    })
+
+@login_required
+@user_passes_test(puede_supervisar)
+def supervision_detalle(request, ejecucion_pk):
+    ejecucion = get_object_or_404(EjecucionProceso, pk=ejecucion_pk)
+    # Verificar que el supervisor tenga al usuario a cargo
+    if request.user.staff_profile not in ejecucion.usuario.supervisores.all() and not es_admin(request.user):
+        messages.error(request, 'No puedes supervisar este proceso')
+        return redirect('supervision_dashboard')
+    
+    pasos = ejecucion.pasos_ejecutados.all().select_related('paso')
+    if request.method == 'POST':
+        # Guardar ajustes de pasos
+        for paso_ejec in pasos:
+            puntaje_ajustado = request.POST.get(f'puntaje_ajustado_{paso_ejec.id}')
+            comentario = request.POST.get(f'comentario_supervision_{paso_ejec.id}')
+            if puntaje_ajustado is not None:
+                paso_ejec.puntaje_ajustado = int(puntaje_ajustado) if puntaje_ajustado else None
+            paso_ejec.comentario_supervision = comentario or ''
+            paso_ejec.save()
+        # Guardar comentario general y resultado
+        ejecucion.comentario_general = request.POST.get('comentario_general', '')
+        if 'aprobar' in request.POST:
+            ejecucion.resultado_supervision = 'aprobado'
+            ejecucion.estado_supervision = 'aprobado'
+            ejecucion.estado = 'supervisado'
+            messages.success(request, 'Proceso aprobado')
+        elif 'rechazar' in request.POST:
+            ejecucion.resultado_supervision = 'rechazado'
+            ejecucion.estado_supervision = 'rechazado'
+            ejecucion.estado = 'supervisado'
+            messages.success(request, 'Proceso rechazado')
+        else:
+            ejecucion.estado_supervision = 'en_revision'
+            messages.success(request, 'Cambios guardados')
+        ejecucion.save()
+        return redirect('supervision_dashboard')
+    
+    return render(request, 'core/supervision_detalle.html', {'ejecucion': ejecucion, 'pasos': pasos})
+
+# ---------- PLANIFICACIÓN (MOD-6) ----------
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def planificacion_dashboard(request):
+    planificaciones = Planificacion.objects.all().select_related('proceso', 'usuario_asignado')
+    proceso_id = request.GET.get('proceso', '')
+    frecuencia = request.GET.get('frecuencia', '')
+    estado = request.GET.get('estado', '')
+    if proceso_id:
+        planificaciones = planificaciones.filter(proceso_id=proceso_id)
+    if frecuencia:
+        planificaciones = planificaciones.filter(frecuencia=frecuencia)
+    if estado:
+        planificaciones = planificaciones.filter(activo=(estado == 'activo'))
+    paginator = Paginator(planificaciones, 10)
+    page = request.GET.get('page')
+    planificaciones_page = paginator.get_page(page)
+    procesos = Proceso.objects.all()
+    return render(request, 'core/planificacion_dashboard.html', {
+        'planificaciones': planificaciones_page,
+        'procesos': procesos,
+        'filtros': {'proceso': proceso_id, 'frecuencia': frecuencia, 'estado': estado}
+    })
+
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def planificacion_crear(request):
+    if request.method == 'POST':
+        form = PlanificacionForm(request.POST)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Planificación creada')
+            return redirect('planificacion_dashboard')
+    else:
+        form = PlanificacionForm(initial={'usuario_asignado': request.user.staff_profile})
+    return render(request, 'core/planificacion_form.html', {'form': form, 'titulo': 'Crear Planificación'})
+
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def planificacion_editar(request, pk):
+    plan = get_object_or_404(Planificacion, pk=pk)
+    if request.method == 'POST':
+        form = PlanificacionForm(request.POST, instance=plan)
+        if form.is_valid():
+            form.save()
+            messages.success(request, 'Planificación actualizada')
+            return redirect('planificacion_dashboard')
+    else:
+        form = PlanificacionForm(instance=plan)
+    return render(request, 'core/planificacion_form.html', {'form': form, 'titulo': 'Editar Planificación'})
+
+@login_required
+@user_passes_test(puede_gestionar_procesos)
+def planificacion_eliminar(request, pk):
+    plan = get_object_or_404(Planificacion, pk=pk)
+    if request.method == 'POST':
+        plan.delete()
+        messages.success(request, 'Planificación eliminada')
+        return redirect('planificacion_dashboard')
+    return render(request, 'core/confirm_delete.html', {'object': plan, 'tipo': 'Planificación', 'cancel_url': 'planificacion_dashboard'})
+
+# ---------- WIKY (MOD-4) ----------
+@login_required
+def wiky(request):
+    areas = Area.objects.prefetch_related('procesos__pasos').all()
+    return render(request, 'core/wiky.html', {'areas': areas})
+
+# ---------- LOGIN ----------
+def login_view(request):
+    if request.method == 'POST':
+        username = request.POST['username']
+        password = request.POST['password']
+        user = authenticate(request, username=username, password=password)
+        if user is not None:
+            auth_login(request, user)
+            return redirect('catalogo_procesos')
+        else:
+            messages.error(request, 'Credenciales inválidas')
+    return render(request, 'registration/login.html')
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/forms.py
+########################################
+
+from django import forms
+from .models import StaffProfile, Area, Proceso, Paso, EjecucionProceso, EjecucionPaso, Planificacion
+from django.contrib.auth.models import User
+from ckeditor.widgets import CKEditorWidget
+
+class StaffForm(forms.ModelForm):
+    username = forms.CharField(max_length=150, label='Nombre de usuario')
+    first_name = forms.CharField(max_length=30, label='Nombre(s)')
+    last_name = forms.CharField(max_length=150, label='Apellidos')
+    password = forms.CharField(widget=forms.PasswordInput, required=False, help_text='Dejar en blanco para no cambiar')
+    equipo_a_cargo = forms.ModelMultipleChoiceField(queryset=StaffProfile.objects.none(), required=False, label='Equipo a cargo')
+    
+    class Meta:
+        model = StaffProfile
+        fields = ['rol', 'area_asignada', 'minimo_porcentaje', 'procesos_asignados',
+                  'puede_gestionar_staff', 'puede_gestionar_areas', 'puede_gestionar_procesos', 'puede_gestionar_pasos', 'puede_supervisar',
+                  'equipo_a_cargo']
+        widgets = {
+            'procesos_asignados': forms.SelectMultiple(attrs={'size': 5}),
+        }
+    
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        if self.instance and self.instance.pk:
+            self.fields['username'].initial = self.instance.user.username
+            self.fields['first_name'].initial = self.instance.user.first_name
+            self.fields['last_name'].initial = self.instance.user.last_name
+            self.fields['equipo_a_cargo'].queryset = StaffProfile.objects.exclude(pk=self.instance.pk)
+            self.fields['equipo_a_cargo'].initial = self.instance.equipo_a_cargo.all()
+        else:
+            self.fields['equipo_a_cargo'].queryset = StaffProfile.objects.none()
+    
+    def save(self, commit=True):
+        staff = super().save(commit=False)
+        if commit:
+            staff.save()
+            self.save_m2m()
+            # Actualizar relación many-to-many de equipo a cargo
+            if self.cleaned_data.get('equipo_a_cargo'):
+                staff.equipo_a_cargo.set(self.cleaned_data['equipo_a_cargo'])
+            else:
+                staff.equipo_a_cargo.clear()
+        return staff
+
+class AreaForm(forms.ModelForm):
+    class Meta:
+        model = Area
+        fields = ['nombre', 'descripcion', 'responsable', 'minimo_requerido']
+
+class ProcesoForm(forms.ModelForm):
+    class Meta:
+        model = Proceso
+        fields = ['nombre', 'area', 'objetivo', 'video_ayuda', 'nivel_critico', 'tiempo_estimado', 'activo']
+
+class PasoForm(forms.ModelForm):
+    ayuda_html = forms.CharField(widget=CKEditorWidget(), required=False, label='Ayuda (HTML)')
+    
+    class Meta:
+        model = Paso
+        fields = ['nombre', 'descripcion', 'tipo', 'puntos', 'orden', 'ayuda_html', 
+                  'pregunta_condicion', 'paso_si', 'paso_no', 'nivel_critico', 'evidencia_tipo']
+    
+    def __init__(self, *args, **kwargs):
+        proceso_id = kwargs.pop('proceso_id', None)
+        super().__init__(*args, **kwargs)
+        if proceso_id:
+            pasos_qs = Paso.objects.filter(proceso_id=proceso_id)
+            self.fields['paso_si'].queryset = pasos_qs
+            self.fields['paso_no'].queryset = pasos_qs
+
+class PlanificacionForm(forms.ModelForm):
+    class Meta:
+        model = Planificacion
+        fields = ['proceso', 'frecuencia', 'regla', 'fecha_inicio', 'fecha_fin', 'activo', 'usuario_asignado']
+        widgets = {
+            'fecha_inicio': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+            'fecha_fin': forms.DateTimeInput(attrs={'type': 'datetime-local'}),
+        }
+
+class SupervisionPasoForm(forms.ModelForm):
+    class Meta:
+        model = EjecucionPaso
+        fields = ['puntaje_ajustado', 'comentario_supervision']
+
+class SupervisionGeneralForm(forms.ModelForm):
+    class Meta:
+        model = EjecucionProceso
+        fields = ['comentario_general', 'resultado_supervision']
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/urls.py
+########################################
+
+from django.urls import path
+from . import views
+
+urlpatterns = [
+    path('', views.catalogo_procesos, name='home'),
+    # Staff
+    path('staff/crear/', views.staff_crear, name='staff_crear'),
+    path('staff/', views.staff_dashboard, name='staff_dashboard'),
+    path('staff/editar/<int:pk>/', views.staff_editar, name='staff_editar'),
+    path('staff/eliminar/<int:pk>/', views.staff_eliminar, name='staff_eliminar'),
+    # Áreas
+    path('areas/crear/', views.area_crear, name='area_crear'),
+    path('areas/', views.area_dashboard, name='area_dashboard'),
+    path('areas/editar/<int:pk>/', views.area_editar, name='area_editar'),
+    path('areas/eliminar/<int:pk>/', views.area_eliminar, name='area_eliminar'),
+    # Procesos (gestión)
+    path('procesos/crear/', views.proceso_crear, name='proceso_crear'),
+    path('procesos/', views.dashboard_procesos, name='dashboard_procesos'),
+    path('procesos/editar/<int:pk>/', views.proceso_editar, name='proceso_editar'),
+    path('procesos/eliminar/<int:pk>/', views.proceso_eliminar, name='proceso_eliminar'),
+    path('procesos/visualizar/<int:pk>/', views.proceso_visualizar, name='proceso_visualizar'),
+    # Pasos
+    path('procesos/<int:proceso_pk>/pasos/crear/', views.paso_crear, name='paso_crear'),
+    path('procesos/<int:proceso_pk>/pasos/editar/<int:paso_pk>/', views.paso_editar, name='paso_editar'),
+    path('procesos/<int:proceso_pk>/pasos/eliminar/<int:paso_pk>/', views.paso_eliminar, name='paso_eliminar'),
+    # Catálogo y ejecución
+    path('mis-procesos/', views.catalogo_procesos, name='catalogo_procesos'),
+    path('ejecutar/<int:proceso_pk>/', views.ejecutar_proceso, name='ejecutar_proceso'),
+    path('mi-rendimiento/', views.rendimiento_procesos, name='rendimiento_procesos'),
+    # Wiky
+    path('wiky/', views.wiky, name='wiky'),
+    # Login personalizado
+    path('accounts/login/', views.login_view, name='login'),
+    # Planificación
+    path('planificacion/', views.planificacion_dashboard, name='planificacion_dashboard'),
+    path('planificacion/crear/', views.planificacion_crear, name='planificacion_crear'),
+    path('planificacion/editar/<int:pk>/', views.planificacion_editar, name='planificacion_editar'),
+    path('planificacion/eliminar/<int:pk>/', views.planificacion_eliminar, name='planificacion_eliminar'),
+    # Rendimiento de equipo
+    path('rendimiento-equipo/', views.rendimiento_equipo, name='rendimiento_equipo'),
+    path('detalle-mi-rendimiento/<int:ejecucion_pk>/', views.detalle_mi_rendimiento, name='detalle_mi_rendimiento'),
+    path('detalle-rendimiento-equipo/<int:ejecucion_pk>/', views.detalle_rendimiento_equipo, name='detalle_rendimiento_equipo'),
+    # Supervisión
+    path('supervision/', views.supervision_dashboard, name='supervision_dashboard'),
+    path('supervision/detalle/<int:ejecucion_pk>/', views.supervision_detalle, name='supervision_detalle'),
+]
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/migrations/0001_initial.py
+########################################
+
+# Generated by Django 4.2.7 on 2026-04-16 16:45
+
+import ckeditor.fields
+from django.conf import settings
+from django.db import migrations, models
+import django.db.models.deletion
+
+
+class Migration(migrations.Migration):
+
+    initial = True
+
+    dependencies = [
+        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
+    ]
+
+    operations = [
+        migrations.CreateModel(
+            name='Area',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('nombre', models.CharField(max_length=100, unique=True)),
+                ('descripcion', models.TextField(blank=True)),
+                ('minimo_requerido', models.PositiveSmallIntegerField(default=0, help_text='Mínimo % requerido para el área')),
+            ],
+            options={
+                'verbose_name': 'Área',
+                'verbose_name_plural': 'Áreas',
+            },
+        ),
+        migrations.CreateModel(
+            name='Proceso',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('nombre', models.CharField(max_length=150)),
+                ('objetivo', models.TextField(blank=True)),
+                ('video_ayuda', models.URLField(blank=True)),
+                ('nivel_critico', models.CharField(choices=[('baja', 'Baja'), ('media', 'Media'), ('alta', 'Alta')], default='media', max_length=10)),
+                ('tiempo_estimado', models.PositiveIntegerField(blank=True, help_text='Minutos estimados', null=True)),
+                ('activo', models.BooleanField(default=True)),
+                ('area', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='procesos', to='core.area')),
+            ],
+            options={
+                'verbose_name': 'Proceso',
+                'verbose_name_plural': 'Procesos',
+            },
+        ),
+        migrations.CreateModel(
+            name='StaffProfile',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('rol', models.CharField(choices=[('admin', 'Administrador'), ('supervisor', 'Supervisor'), ('auditor', 'Auditor'), ('operador', 'Operador')], default='operador', max_length=20)),
+                ('minimo_porcentaje', models.PositiveSmallIntegerField(default=0, help_text='Porcentaje mínimo requerido')),
+                ('puede_gestionar_staff', models.BooleanField(default=False)),
+                ('puede_gestionar_areas', models.BooleanField(default=False)),
+                ('puede_gestionar_procesos', models.BooleanField(default=False)),
+                ('puede_gestionar_pasos', models.BooleanField(default=False)),
+                ('puede_supervisar', models.BooleanField(default=False)),
+                ('area_asignada', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='miembros', to='core.area')),
+                ('equipo_a_cargo', models.ManyToManyField(blank=True, related_name='supervisores', to='core.staffprofile')),
+                ('procesos_asignados', models.ManyToManyField(blank=True, related_name='usuarios_asignados', to='core.proceso')),
+                ('user', models.OneToOneField(on_delete=django.db.models.deletion.CASCADE, related_name='staff_profile', to=settings.AUTH_USER_MODEL)),
+            ],
+            options={
+                'verbose_name': 'Staff',
+                'verbose_name_plural': 'Staff',
+            },
+        ),
+        migrations.CreateModel(
+            name='Planificacion',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('frecuencia', models.CharField(choices=[('diaria', 'Diaria'), ('semanal', 'Semanal'), ('mensual', 'Mensual')], max_length=10)),
+                ('regla', models.CharField(help_text='Ej: "lunes,miercoles" para semanal, "15" para mensual, o "*" para diaria', max_length=100)),
+                ('fecha_inicio', models.DateTimeField(blank=True, null=True)),
+                ('fecha_fin', models.DateTimeField(blank=True, null=True)),
+                ('activo', models.BooleanField(default=True)),
+                ('proceso', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='planificaciones', to='core.proceso')),
+                ('usuario_asignado', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='planificaciones', to='core.staffprofile')),
+            ],
+            options={
+                'verbose_name': 'Planificación',
+                'verbose_name_plural': 'Planificaciones',
+            },
+        ),
+        migrations.CreateModel(
+            name='Paso',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('nombre', models.CharField(max_length=150)),
+                ('descripcion', models.TextField(blank=True)),
+                ('tipo', models.CharField(choices=[('normal', 'Normal'), ('condicional', 'Condicional')], default='normal', max_length=20)),
+                ('puntos', models.PositiveSmallIntegerField(default=1)),
+                ('orden', models.PositiveSmallIntegerField()),
+                ('ayuda_html', ckeditor.fields.RichTextField(blank=True, help_text='Contenido HTML de ayuda', null=True)),
+                ('pregunta_condicion', models.CharField(blank=True, help_text='Pregunta si el paso es condicional', max_length=255, null=True)),
+                ('nivel_critico', models.CharField(choices=[('baja', 'Baja'), ('media', 'Media'), ('alta', 'Alta')], default='media', max_length=10)),
+                ('evidencia_tipo', models.CharField(choices=[('ninguna', 'Ninguna'), ('fotografica', 'Solo fotográfica'), ('descriptiva', 'Solo descriptiva'), ('ambas', 'Fotográfica y descriptiva')], default='ninguna', help_text='Tipo de evidencia requerida', max_length=20)),
+                ('paso_no', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='condicion_no', to='core.paso')),
+                ('paso_si', models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='condicion_si', to='core.paso')),
+                ('proceso', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pasos', to='core.proceso')),
+            ],
+            options={
+                'ordering': ['orden'],
+                'unique_together': {('proceso', 'orden')},
+            },
+        ),
+        migrations.CreateModel(
+            name='EjecucionProceso',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('fecha_inicio', models.DateTimeField(auto_now_add=True)),
+                ('fecha_fin', models.DateTimeField(blank=True, null=True)),
+                ('estado', models.CharField(choices=[('en_progreso', 'En progreso'), ('completado', 'Completado'), ('cancelado', 'Cancelado'), ('supervisado', 'Supervisado'), ('auditado', 'Auditado')], default='en_progreso', max_length=20)),
+                ('puntos_obtenidos', models.PositiveSmallIntegerField(default=0)),
+                ('puntos_totales', models.PositiveSmallIntegerField(default=0)),
+                ('comentario_general', models.TextField(blank=True, help_text='Comentario de supervisión/auditoría')),
+                ('estado_supervision', models.CharField(choices=[('pendiente', 'Pendiente'), ('en_revision', 'En revisión'), ('aprobado', 'Aprobado'), ('rechazado', 'Rechazado')], default='pendiente', max_length=20)),
+                ('resultado_supervision', models.CharField(blank=True, choices=[('aprobado', 'Aprobado'), ('rechazado', 'Rechazado')], max_length=20, null=True)),
+                ('proceso', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ejecuciones', to='core.proceso')),
+                ('usuario', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='ejecuciones', to='core.staffprofile')),
+            ],
+        ),
+        migrations.CreateModel(
+            name='EjecucionPaso',
+            fields=[
+                ('id', models.BigAutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
+                ('estado', models.CharField(choices=[('pendiente', 'Pendiente'), ('completado', 'Completado'), ('saltado', 'Saltado')], default='pendiente', max_length=20)),
+                ('respuesta_condicion', models.BooleanField(blank=True, null=True)),
+                ('evidencia_fotografica', models.ImageField(blank=True, null=True, upload_to='evidencias/fotos/')),
+                ('evidencia_descriptiva', models.TextField(blank=True)),
+                ('tiempo_inicio', models.DateTimeField(auto_now_add=True)),
+                ('tiempo_fin', models.DateTimeField(blank=True, null=True)),
+                ('fecha_completado', models.DateTimeField(blank=True, null=True)),
+                ('puntaje_original', models.PositiveSmallIntegerField(default=0)),
+                ('puntaje_ajustado', models.PositiveSmallIntegerField(blank=True, null=True)),
+                ('comentario_supervision', models.TextField(blank=True)),
+                ('ejecucion', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, related_name='pasos_ejecutados', to='core.ejecucionproceso')),
+                ('paso', models.ForeignKey(on_delete=django.db.models.deletion.CASCADE, to='core.paso')),
+            ],
+            options={
+                'ordering': ['paso__orden'],
+            },
+        ),
+        migrations.AddField(
+            model_name='area',
+            name='responsable',
+            field=models.ForeignKey(null=True, on_delete=django.db.models.deletion.SET_NULL, related_name='areas_a_cargo', to='core.staffprofile'),
+        ),
+    ]
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/migrations/__init__.py
+########################################
+
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/models.py
+########################################
+
+from django.db import models
+from django.contrib.auth.models import User
+from django.urls import reverse
+from ckeditor.fields import RichTextField
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+
+# Roles predefinidos
+ROLES = (
+    ('admin', 'Administrador'),
+    ('supervisor', 'Supervisor'),
+    ('auditor', 'Auditor'),
+    ('operador', 'Operador'),
+)
+
+CRITICIDAD = (
+    ('baja', 'Baja'),
+    ('media', 'Media'),
+    ('alta', 'Alta'),
+)
+
+ESTADO_EJECUCION = (
+    ('en_progreso', 'En progreso'),
+    ('completado', 'Completado'),
+    ('cancelado', 'Cancelado'),
+    ('supervisado', 'Supervisado'),
+    ('auditado', 'Auditado'),
+)
+
+TIPO_PASO = (
+    ('normal', 'Normal'),
+    ('condicional', 'Condicional'),
+)
+
+TIPO_EVIDENCIA = (
+    ('ninguna', 'Ninguna'),
+    ('fotografica', 'Solo fotográfica'),
+    ('descriptiva', 'Solo descriptiva'),
+    ('ambas', 'Fotográfica y descriptiva'),
+)
+
+FRECUENCIA_RECURRENCIA = (
+    ('diaria', 'Diaria'),
+    ('semanal', 'Semanal'),
+    ('mensual', 'Mensual'),
+)
+
+ESTADO_SUPERVISION = (
+    ('pendiente', 'Pendiente'),
+    ('en_revision', 'En revisión'),
+    ('aprobado', 'Aprobado'),
+    ('rechazado', 'Rechazado'),
+)
+
+class StaffProfile(models.Model):
+    user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='staff_profile')
+    rol = models.CharField(max_length=20, choices=ROLES, default='operador')
+    area_asignada = models.ForeignKey('Area', on_delete=models.SET_NULL, null=True, blank=True, related_name='miembros')
+    minimo_porcentaje = models.PositiveSmallIntegerField(default=0, help_text='Porcentaje mínimo requerido')
+    procesos_asignados = models.ManyToManyField('Proceso', blank=True, related_name='usuarios_asignados')
+    equipo_a_cargo = models.ManyToManyField('self', symmetrical=False, blank=True, related_name='supervisores')
+    
+    # Permisos
+    puede_gestionar_staff = models.BooleanField(default=False)
+    puede_gestionar_areas = models.BooleanField(default=False)
+    puede_gestionar_procesos = models.BooleanField(default=False)
+    puede_gestionar_pasos = models.BooleanField(default=False)
+    puede_supervisar = models.BooleanField(default=False)
+    
+    def __str__(self):
+        return self.user.get_full_name() or self.user.username
+    
+    def get_full_name(self):
+        return self.user.get_full_name()
+    
+    class Meta:
+        verbose_name = 'Staff'
+        verbose_name_plural = 'Staff'
+
+class Area(models.Model):
+    nombre = models.CharField(max_length=100, unique=True)
+    descripcion = models.TextField(blank=True)
+    responsable = models.ForeignKey(StaffProfile, on_delete=models.SET_NULL, null=True, related_name='areas_a_cargo')
+    minimo_requerido = models.PositiveSmallIntegerField(default=0, help_text='Mínimo % requerido para el área')
+    
+    def __str__(self):
+        return self.nombre
+    
+    class Meta:
+        verbose_name = 'Área'
+        verbose_name_plural = 'Áreas'
+
+class Proceso(models.Model):
+    nombre = models.CharField(max_length=150)
+    area = models.ForeignKey(Area, on_delete=models.CASCADE, related_name='procesos')
+    objetivo = models.TextField(blank=True)
+    video_ayuda = models.URLField(blank=True)
+    nivel_critico = models.CharField(max_length=10, choices=CRITICIDAD, default='media')
+    tiempo_estimado = models.PositiveIntegerField(null=True, blank=True, help_text='Minutos estimados')
+    activo = models.BooleanField(default=True)
+    
+    def __str__(self):
+        return f"{self.nombre} ({self.area.nombre})"
+    
+    def get_absolute_url(self):
+        return reverse('dashboard_procesos')
+    
+    class Meta:
+        verbose_name = 'Proceso'
+        verbose_name_plural = 'Procesos'
+
+class Paso(models.Model):
+    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='pasos')
+    nombre = models.CharField(max_length=150)
+    descripcion = models.TextField(blank=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_PASO, default='normal')
+    puntos = models.PositiveSmallIntegerField(default=1)
+    orden = models.PositiveSmallIntegerField()
+    ayuda_html = RichTextField(blank=True, null=True, help_text='Contenido HTML de ayuda')
+    pregunta_condicion = models.CharField(max_length=255, blank=True, null=True, help_text='Pregunta si el paso es condicional')
+    paso_si = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='condicion_si')
+    paso_no = models.ForeignKey('self', on_delete=models.SET_NULL, null=True, blank=True, related_name='condicion_no')
+    nivel_critico = models.CharField(max_length=10, choices=CRITICIDAD, default='media')
+    evidencia_tipo = models.CharField(max_length=20, choices=TIPO_EVIDENCIA, default='ninguna', help_text='Tipo de evidencia requerida')
+    
+    def __str__(self):
+        return f"{self.orden} - {self.nombre}"
+    
+    class Meta:
+        ordering = ['orden']
+        unique_together = ['proceso', 'orden']
+
+class EjecucionProceso(models.Model):
+    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='ejecuciones')
+    usuario = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='ejecuciones')
+    fecha_inicio = models.DateTimeField(auto_now_add=True)
+    fecha_fin = models.DateTimeField(null=True, blank=True)
+    estado = models.CharField(max_length=20, choices=ESTADO_EJECUCION, default='en_progreso')
+    puntos_obtenidos = models.PositiveSmallIntegerField(default=0)
+    puntos_totales = models.PositiveSmallIntegerField(default=0)
+    comentario_general = models.TextField(blank=True, help_text='Comentario de supervisión/auditoría')
+    estado_supervision = models.CharField(max_length=20, choices=ESTADO_SUPERVISION, default='pendiente')
+    resultado_supervision = models.CharField(max_length=20, choices=(('aprobado','Aprobado'),('rechazado','Rechazado')), null=True, blank=True)
+    
+    def __str__(self):
+        return f"{self.proceso.nombre} - {self.usuario} - {self.estado}"
+    
+    def calcular_cumplimiento(self):
+        if self.puntos_totales == 0:
+            return 0
+        return int((self.puntos_obtenidos / self.puntos_totales) * 100)
+
+class EjecucionPaso(models.Model):
+    ejecucion = models.ForeignKey(EjecucionProceso, on_delete=models.CASCADE, related_name='pasos_ejecutados')
+    paso = models.ForeignKey(Paso, on_delete=models.CASCADE)
+    estado = models.CharField(max_length=20, choices=(('pendiente','Pendiente'),('completado','Completado'),('saltado','Saltado')), default='pendiente')
+    respuesta_condicion = models.BooleanField(null=True, blank=True)
+    evidencia_fotografica = models.ImageField(upload_to='evidencias/fotos/', blank=True, null=True)
+    evidencia_descriptiva = models.TextField(blank=True)
+    tiempo_inicio = models.DateTimeField(auto_now_add=True)
+    tiempo_fin = models.DateTimeField(null=True, blank=True)
+    fecha_completado = models.DateTimeField(null=True, blank=True)
+    # Campos para supervisión
+    puntaje_original = models.PositiveSmallIntegerField(default=0)
+    puntaje_ajustado = models.PositiveSmallIntegerField(null=True, blank=True)
+    comentario_supervision = models.TextField(blank=True)
+    
+    def save(self, *args, **kwargs):
+        if not self.puntaje_original:
+            self.puntaje_original = self.paso.puntos
+        super().save(*args, **kwargs)
+    
+    class Meta:
+        ordering = ['paso__orden']
+
+class Planificacion(models.Model):
+    proceso = models.ForeignKey(Proceso, on_delete=models.CASCADE, related_name='planificaciones')
+    frecuencia = models.CharField(max_length=10, choices=FRECUENCIA_RECURRENCIA)
+    regla = models.CharField(max_length=100, help_text='Ej: "lunes,miercoles" para semanal, "15" para mensual, o "*" para diaria')
+    fecha_inicio = models.DateTimeField(null=True, blank=True)
+    fecha_fin = models.DateTimeField(null=True, blank=True)
+    activo = models.BooleanField(default=True)
+    usuario_asignado = models.ForeignKey(StaffProfile, on_delete=models.CASCADE, related_name='planificaciones')
+    
+    def __str__(self):
+        return f"{self.proceso.nombre} - {self.frecuencia}"
+    
+    class Meta:
+        verbose_name = 'Planificación'
+        verbose_name_plural = 'Planificaciones'
+
+@receiver(post_save, sender=User)
+def crear_perfil_staff(sender, instance, created, **kwargs):
+    if created:
+        StaffProfile.objects.get_or_create(user=instance)
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/__init__.py
+########################################
+
+
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/admin.py
+########################################
+
+from django.contrib import admin
+from .models import *
+
+admin.site.register(StaffProfile)
+admin.site.register(Area)
+admin.site.register(Proceso)
+admin.site.register(Paso)
+admin.site.register(EjecucionProceso)
+admin.site.register(EjecucionPaso)
+
+
+########################################
+# ARCHIVO: /var/waps/sitios-mik/gestion_flujos/core/tests.py
+########################################
+
+from django.test import TestCase
+
+# Create your tests here.
+
+
+

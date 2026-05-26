@@ -1,0 +1,39 @@
+{% extends 'base.html' %}
+{% block title_page %}Gestión de Staff{% endblock %}
+{% block breadcrumb %}Mi Equipo{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Dashboard Staff</h3>
+        <a href="{% url 'staff_crear' %}" class="bg-secondary px-4 py-2 rounded-lg font-bold text-sm">+ Crear Staff</a>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="bg-softGray border-b text-[10px] uppercase font-bold text-gray-400">
+                    <th class="p-4">Nombre</th>
+                    <th class="p-4">Rol</th>
+                    <th class="p-4">Área</th>
+                    <th class="p-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="divide-y">
+                {% for s in staff_list %}
+                <tr>
+                    <td class="p-4 font-bold">{{ s.user.get_full_name|default:s.user.username }}</td>
+                    <td class="p-4">{{ s.get_rol_display }}</td>
+                    <td class="p-4">{{ s.area_asignada.nombre|default:"—" }}</td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'staff_editar' s.pk %}" class="text-gray-400 hover:text-black mr-2"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'staff_eliminar' s.pk %}" class="text-red-400 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="4" class="p-4 text-center text-gray-400">No hay staff registrado.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=staff_list %}
+</div>
+{% endblock %}

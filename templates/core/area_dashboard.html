@@ -1,0 +1,28 @@
+{% extends 'base.html' %}
+{% block title_page %}Áreas{% endblock %}
+{% block breadcrumb %}Catálogo de Áreas{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+    {% for a in areas %}
+    <div class="bg-white p-6 rounded-2xl border hover:shadow-lg transition-all">
+        <h3 class="font-bold text-lg">{{ a.nombre }}</h3>
+        <p class="text-xs text-gray-400 mb-4">{{ a.descripcion|truncatechars:60 }}</p>
+        <div class="pt-4 border-t flex justify-between items-center">
+            <span class="text-xs font-bold text-secondaryHover">Min: {{ a.minimo_requerido }}%</span>
+            <div>
+                <a href="{% url 'area_editar' a.pk %}" class="text-gray-300 hover:text-black mr-2"><i class="fas fa-edit"></i></a>
+                <a href="{% url 'area_eliminar' a.pk %}" class="text-red-300 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+            </div>
+        </div>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+        <i class="fas fa-building text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-400">No hay áreas registradas.</p>
+    </div>
+    {% endfor %}
+    <div onclick="location.href='{% url 'area_crear' %}'" class="border-2 border-dashed border-gray-200 rounded-2xl flex items-center justify-center p-6 cursor-pointer hover:bg-white text-gray-300 hover:text-secondary transition-all">
+        + Crear Área
+    </div>
+</div>
+{% endblock %}

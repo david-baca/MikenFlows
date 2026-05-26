@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+{% block title_page %}Planificación de Procesos{% endblock %}
+{% block breadcrumb %}Reglas de recurrencia{% endblock %}
+
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Reglas de recurrencia</h3>
+        <a href="{% url 'planificacion_crear' %}" class="bg-secondary px-4 py-2 rounded-lg font-bold text-sm">+ Crear Planificación</a>
+    </div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <select name="proceso" class="border rounded p-2">
+                <option value="">Todos los procesos</option>
+                {% for p in procesos %}
+                <option value="{{ p.id }}" {% if filtros.proceso == p.id|stringformat:'s' %}selected{% endif %}>{{ p.nombre }}</option>
+                {% endfor %}
+            </select>
+            <select name="frecuencia" class="border rounded p-2">
+                <option value="">Frecuencia</option>
+                <option value="diaria" {% if filtros.frecuencia == 'diaria' %}selected{% endif %}>Diaria</option>
+                <option value="semanal" {% if filtros.frecuencia == 'semanal' %}selected{% endif %}>Semanal</option>
+                <option value="mensual" {% if filtros.frecuencia == 'mensual' %}selected{% endif %}>Mensual</option>
+            </select>
+            <select name="estado" class="border rounded p-2">
+                <option value="">Estado</option>
+                <option value="activo" {% if filtros.estado == 'activo' %}selected{% endif %}>Activo</option>
+                <option value="inactivo" {% if filtros.estado == 'inactivo' %}selected{% endif %}>Inactivo</option>
+            </select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <div class="overflow-x-auto">
+        <table class="w-full text-left text-sm">
+            <thead>
+                <tr class="bg-softGray border-b">
+                    <th class="p-4">Proceso</th>
+                    <th class="p-4">Frecuencia</th>
+                    <th class="p-4">Regla</th>
+                    <th class="p-4">Usuario asignado</th>
+                    <th class="p-4">Estado</th>
+                    <th class="p-4 text-right">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for plan in planificaciones %}
+                <tr>
+                    <td class="p-4 font-medium">{{ plan.proceso.nombre }}</td>
+                    <td class="p-4">{{ plan.get_frecuencia_display }}</td>
+                    <td class="p-4">{{ plan.regla }}</td>
+                    <td class="p-4">{{ plan.usuario_asignado.user.get_full_name }}</td>
+                    <td class="p-4">
+                        {% if plan.activo %}
+                        <span class="bg-green-100 text-green-800 px-2 py-1 rounded text-xs">Activo</span>
+                        {% else %}
+                        <span class="bg-red-100 text-red-800 px-2 py-1 rounded text-xs">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td class="p-4 text-right">
+                        <a href="{% url 'planificacion_editar' plan.pk %}" class="text-gray-400 hover:text-black mr-2"><i class="fas fa-edit"></i></a>
+                        <a href="{% url 'planificacion_eliminar' plan.pk %}" class="text-red-400 hover:text-red-600"><i class="fas fa-trash-alt"></i></a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6" class="p-4 text-center">Sin planificaciones registradas</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=planificaciones %}
+</div>
+{% endblock %}

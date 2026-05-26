@@ -1,0 +1,37 @@
+{% extends 'base.html' %}
+{% block title_page %}Catálogo de Procesos{% endblock %}
+{% block breadcrumb %}Mis Procesos{% endblock %}
+{% block content %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+    {% for proceso in procesos %}
+    <div class="bg-white p-8 rounded-3xl border hover:shadow-2xl transition-all flex flex-col justify-between group">
+        <div>
+            <span class="text-[9px] font-black uppercase bg-gray-100 px-2 py-1 rounded text-gray-400">{{ proceso.area.nombre }}</span>
+            <h3 class="font-bold text-lg mt-2">{{ proceso.nombre }}</h3>
+            <p class="text-xs text-gray-400 mt-1">Crítico: {{ proceso.get_nivel_critico_display }}</p>
+        </div>
+        <a href="{% url 'ejecutar_proceso' proceso.pk %}" class="mt-8 bg-black text-white py-3 rounded-2xl font-bold text-xs uppercase tracking-widest hover:bg-secondary hover:text-black transition-all shadow-lg text-center block">Iniciar Proceso</a>
+    </div>
+    {% empty %}
+    <div class="col-span-full text-center py-20 bg-white rounded-3xl border-2 border-dashed border-gray-200">
+        <i class="fas fa-inbox text-4xl text-gray-300 mb-4"></i>
+        <p class="text-gray-400">No hay procesos disponibles para ti.</p>
+    </div>
+    {% endfor %}
+</div>
+
+<!-- Paginación (si usas paginación de Django) -->
+{% if is_paginated %}
+<div class="mt-8 flex justify-center">
+    <nav class="inline-flex rounded-md shadow-sm">
+        {% if page_obj.has_previous %}
+        <a href="?page={{ page_obj.previous_page_number }}" class="px-3 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Anterior</a>
+        {% endif %}
+        <span class="px-3 py-2 border-t border-b border-gray-300 bg-white text-sm font-medium text-gray-700">Página {{ page_obj.number }} de {{ page_obj.paginator.num_pages }}</span>
+        {% if page_obj.has_next %}
+        <a href="?page={{ page_obj.next_page_number }}" class="px-3 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-700 hover:bg-gray-50">Siguiente</a>
+        {% endif %}
+    </nav>
+</div>
+{% endif %}
+{% endblock %}

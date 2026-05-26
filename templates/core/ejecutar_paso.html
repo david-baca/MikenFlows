@@ -1,0 +1,46 @@
+{% extends 'base.html' %}
+{% load static %}
+{% block title_page %}Ejecutando: {{ proceso.nombre }}{% endblock %}
+{% block breadcrumb %}Ejecución{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto">
+    <div class="bg-white p-10 rounded-[3.5rem] border-2 border-secondary shadow-2xl relative overflow-hidden">
+        <div class="mb-10">
+            <span class="bg-black text-white px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest">Paso {{ paso.orden }}: {{ paso.nombre }}</span>
+            <h3 class="text-3xl font-black mt-4 text-gray-800 leading-tight">
+                {% if paso.tipo == 'condicional' %}{{ paso.pregunta_condicion }}{% else %}{{ paso.nombre }}{% endif %}
+            </h3>
+            {% if paso.descripcion %}
+            <div class="mt-4 text-gray-600">{{ paso.descripcion|linebreaks }}</div>
+            {% endif %}
+        </div>
+        <div class="flex flex-col gap-4">
+            <button onclick="showHelpModal('{{ paso.nombre }}', `{{ paso.ayuda_html|escapejs }}`)" class="w-full bg-gray-50 border py-4 rounded-2xl font-bold text-xs flex items-center justify-center gap-2 hover:bg-white transition-all shadow-sm">
+                <i class="fas fa-question-circle text-secondary text-lg"></i> VER AYUDA
+            </button>
+            <div class="mt-6 border-t pt-6">
+                {% if paso.tipo == 'condicional' %}
+                <div class="grid grid-cols-2 gap-4">
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="respuesta_condicion" value="si">
+                        <button type="submit" class="w-full bg-secondary hover:bg-secondaryHover py-5 rounded-2xl font-black uppercase tracking-[3px] shadow-lg shadow-secondary/20 transition-all">SÍ</button>
+                    </form>
+                    <form method="post" class="inline">
+                        {% csrf_token %}
+                        <input type="hidden" name="respuesta_condicion" value="no">
+                        <button type="submit" class="w-full bg-gray-100 hover:bg-gray-200 py-5 rounded-2xl font-black uppercase tracking-[3px] transition-all">NO</button>
+                    </form>
+                </div>
+                {% else %}
+                <form method="post">
+                    {% csrf_token %}
+                    <input type="hidden" name="respuesta_condicion" value="listo">
+                    <button type="submit" class="w-full bg-secondary hover:bg-secondaryHover py-5 rounded-2xl font-black uppercase tracking-[3px] shadow-lg shadow-secondary/20 transition-all">LISTO / SIGUIENTE</button>
+                </form>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

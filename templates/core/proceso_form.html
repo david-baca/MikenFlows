@@ -1,0 +1,50 @@
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre del proceso</label>
+                <input type="text" name="nombre" value="{{ form.nombre.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Área</label>
+                <select name="area" class="w-full border rounded-xl p-3 bg-white">
+                    {% for area in form.area.field.queryset %}
+                    <option value="{{ area.pk }}" {% if form.area.value == area.pk %}selected{% endif %}>{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Objetivo</label>
+                <textarea name="objetivo" class="w-full border rounded-xl p-3">{{ form.objetivo.value|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Video de ayuda (URL)</label>
+                <input type="url" name="video_ayuda" value="{{ form.video_ayuda.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nivel crítico</label>
+                <select name="nivel_critico" class="w-full border rounded-xl p-3 bg-white">
+                    {% for value, label in form.nivel_critico.field.choices %}
+                    <option value="{{ value }}" {% if form.nivel_critico.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Tiempo estimado (minutos)</label>
+                <input type="number" name="tiempo_estimado" value="{{ form.tiempo_estimado.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label><input type="checkbox" name="activo" {% if form.activo.value %}checked{% endif %}> Activo</label>
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'dashboard_procesos' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

@@ -1,0 +1,75 @@
+{% extends 'base.html' %}
+{% block title_page %}Supervisión de Proceso{% endblock %}
+{% block breadcrumb %}Revisión paso a paso{% endblock %}
+
+{% block content %}
+<div class="bg-white p-6 rounded-2xl shadow-sm">
+    <div class="flex justify-between items-start mb-4">
+        <div>
+            <h2 class="text-2xl font-bold">{{ ejecucion.proceso.nombre }}</h2>
+            <p class="text-gray-500">Usuario: <strong>{{ ejecucion.usuario.user.get_full_name }}</strong> | Estado ejecución: {{ ejecucion.get_estado_display }}</p>
+            <p class="text-sm text-gray-400 mt-1">Inicio: {{ ejecucion.fecha_inicio|date:"d/m/Y H:i" }} | Fin: {{ ejecucion.fecha_fin|date:"d/m/Y H:i"|default:"—" }}</p>
+        </div>
+        <div class="text-right">
+            <span class="px-3 py-1 rounded-full text-xs font-bold 
+                {% if ejecucion.estado_supervision == 'aprobado' %}bg-green-100 text-green-800
+                {% elif ejecucion.estado_supervision == 'rechazado' %}bg-red-100 text-red-800
+                {% elif ejecucion.estado_supervision == 'en_revision' %}bg-blue-100 text-blue-800
+                {% else %}bg-gray-100 text-gray-600{% endif %}">
+                {{ ejecucion.get_estado_supervision_display }}
+            </span>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+        <div class="overflow-x-auto">
+            <table class="w-full mt-4 border-collapse border border-gray-200">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="border p-3 text-left">Paso</th>
+                        <th class="border p-3 text-center">Puntaje original</th>
+                        <th class="border p-3 text-center">Puntaje ajustado</th>
+                        <th class="border p-3">Evidencia</th>
+                        <th class="border p-3">Comentario de supervisión</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for p in pasos %}
+                    <tr class="hover:bg-gray-50">
+                        <td class="border p-3 font-medium">{{ p.paso.nombre }}</td>
+                        <td class="border p-3 text-center">{{ p.puntaje_original }}</td>
+                        <td class="border p-3 text-center">
+                            <input type="number" name="puntaje_ajustado_{{ p.id }}" value="{{ p.puntaje_ajustado|default:p.puntaje_original }}" class="border rounded w-20 p-1 text-center">
+                        </td>
+                        <td class="border p-3">
+                            {% if p.evidencia_fotografica %}
+                                <a href="{{ p.evidencia_fotografica.url }}" target="_blank" class="text-blue-500 hover:underline">📷 Ver foto</a><br>
+                            {% endif %}
+                            {% if p.evidencia_descriptiva %}
+                                <details class="text-xs"><summary>📝 Ver descripción</summary><div class="mt-1 p-2 bg-gray-50 rounded">{{ p.evidencia_descriptiva|linebreaks }}</div></details>
+                            {% endif %}
+                        </td>
+                        <td class="border p-3">
+                            <textarea name="comentario_supervision_{{ p.id }}" rows="2" class="w-full border rounded p-1">{{ p.comentario_supervision }}</textarea>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+        <div class="mt-6">
+            <label class="block text-sm font-bold mb-1">Comentario general (para todo el proceso)</label>
+            <textarea name="comentario_general" rows="3" class="w-full border rounded p-2">{{ ejecucion.comentario_general }}</textarea>
+        </div>
+
+        <div class="mt-6 flex flex-wrap gap-4">
+            <button type="submit" name="guardar" class="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600">Guardar cambios</button>
+            <button type="submit" name="aprobar" class="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-600">Aprobar proceso</button>
+            <button type="submit" name="rechazar" class="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600">Rechazar proceso</button>
+            <a href="{% url 'supervision_dashboard' %}" class="bg-gray-300 text-gray-700 px-4 py-2 rounded hover:bg-gray-400">Cancelar</a>
+        </div>
+    </form>
+</div>
+{% endblock %}

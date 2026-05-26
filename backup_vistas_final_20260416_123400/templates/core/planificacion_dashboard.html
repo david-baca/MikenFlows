@@ -1,0 +1,27 @@
+{% extends 'base.html' %}
+{% block title_page %}Planificación de Procesos{% endblock %}
+{% block content %}
+<div class="table-container shadow-sm">
+    <div class="p-4 border-b flex justify-between items-center">
+        <h3 class="font-bold">Reglas de recurrencia</h3>
+        <a href="{% url 'planificacion_crear' %}" class="bg-secondary px-4 py-2 rounded-lg font-bold text-sm">+ Crear Planificación</a>
+    </div>
+    <div class="p-4 border-b bg-softGray">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <select name="proceso" class="border rounded p-2"><option value="">Todos los procesos</option>{% for p in procesos %}<option value="{{ p.id }}" {% if filtros.proceso == p.id|stringformat:'s' %}selected{% endif %}>{{ p.nombre }}</option>{% endfor %}</select>
+            <select name="frecuencia" class="border rounded p-2"><option value="">Frecuencia</option><option value="diaria">Diaria</option><option value="semanal">Semanal</option><option value="mensual">Mensual</option></select>
+            <select name="estado" class="border rounded p-2"><option value="">Estado</option><option value="activo">Activo</option><option value="inactivo">Inactivo</option></select>
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+        </form>
+    </div>
+    <table class="w-full text-left text-sm">
+        <thead><tr class="bg-softGray border-b"><th class="p-4">Proceso</th><th class="p-4">Frecuencia</th><th class="p-4">Regla</th><th class="p-4">Usuario asignado</th><th class="p-4">Estado</th><th class="p-4 text-right">Acciones</th></tr></thead>
+        <tbody>
+            {% for plan in planificaciones %}
+            <tr><td class="p-4">{{ plan.proceso.nombre }}</td><td class="p-4">{{ plan.get_frecuencia_display }}</td><td class="p-4">{{ plan.regla }}</td><td class="p-4">{{ plan.usuario_asignado.user.get_full_name }}</td><td class="p-4">{% if plan.activo %}Activo{% else %}Inactivo{% endif %}</td><td class="p-4 text-right"><a href="{% url 'planificacion_editar' plan.pk %}" class="text-gray-400 hover:text-black"><i class="fas fa-edit"></i></a> <a href="{% url 'planificacion_eliminar' plan.pk %}" class="text-red-400"><i class="fas fa-trash-alt"></i></a></td></tr>
+            {% empty %}<tr><td colspan="6" class="p-4 text-center">Sin planificaciones</td></tr>{% endfor %}
+        </tbody>
+    </table>
+    {% include 'pagination.html' with page=planificaciones %}
+</div>
+{% endblock %}

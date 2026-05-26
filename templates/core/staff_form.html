@@ -1,0 +1,150 @@
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+
+{% block extra_js %}
+<script>
+    function showTab(tab) {
+        document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+        document.querySelectorAll('.tab-btn').forEach(el => {
+            el.classList.remove('border-black', 'font-bold');
+            el.classList.add('text-gray-400');
+        });
+        document.getElementById('content-' + tab).classList.remove('hidden');
+        const activeTab = document.getElementById('tab-' + tab);
+        activeTab.classList.add('border-black', 'font-bold');
+        activeTab.classList.remove('text-gray-400');
+    }
+
+    function toggleEquipoTab() {
+        const rolSelect = document.getElementById('id_rol');
+        const equipoTab = document.getElementById('tab-equipo');
+        const rolesPermitidos = ['admin', 'supervisor', 'auditor'];
+        if (rolesPermitidos.includes(rolSelect.value)) {
+            equipoTab.classList.remove('hidden');
+        } else {
+            equipoTab.classList.add('hidden');
+            // Si la pestaña equipo está activa y se oculta, cambiar a general
+            if (document.getElementById('tab-equipo').classList.contains('border-black')) {
+                showTab('general');
+            }
+        }
+    }
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const rolSelect = document.getElementById('id_rol');
+        if (rolSelect) {
+            rolSelect.addEventListener('change', toggleEquipoTab);
+            toggleEquipoTab(); // ejecutar al cargar
+        }
+        // Mostrar primera pestaña por defecto
+        showTab('general');
+    });
+</script>
+{% endblock %}
+
+{% block content %}
+<div class="max-w-2xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <!-- Tabs -->
+    <div class="mb-6 border-b">
+        <div class="flex gap-6">
+            <button type="button" onclick="showTab('general')" id="tab-general"
+                class="tab-btn border-b-2 border-black font-bold pb-2">
+                General
+            </button>
+            <button type="button" onclick="showTab('config')" id="tab-config"
+                class="tab-btn text-gray-400 pb-2">
+                Configuración
+            </button>
+            <button type="button" onclick="showTab('equipo')" id="tab-equipo"
+                class="tab-btn text-gray-400 pb-2 hidden">
+                Equipo a cargo
+            </button>
+        </div>
+    </div>
+
+    <form method="post">
+        {% csrf_token %}
+
+        <!-- TAB GENERAL (Datos personales) -->
+        <div id="content-general" class="tab-content space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre de usuario</label>
+                <input type="text" name="username" value="{{ form.username.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre(s)</label>
+                <input type="text" name="first_name" value="{{ form.first_name.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Apellidos</label>
+                <input type="text" name="last_name" value="{{ form.last_name.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Contraseña (dejar en blanco para no cambiar)</label>
+                <input type="password" name="password" class="w-full border rounded-xl p-3">
+            </div>
+        </div>
+
+        <!-- TAB CONFIGURACIÓN (Rol, área, permisos, procesos, mínimo) -->
+        <div id="content-config" class="tab-content hidden space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Rol</label>
+                <select name="rol" id="id_rol" class="w-full border rounded-xl p-3 bg-white">
+                    {% for value, label in form.rol.field.choices %}
+                    <option value="{{ value }}" {% if form.rol.value == value %}selected{% endif %}>{{ label }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Área asignada</label>
+                <select name="area_asignada" class="w-full border rounded-xl p-3 bg-white">
+                    <option value="">---------</option>
+                    {% for area in form.area_asignada.field.queryset %}
+                    <option value="{{ area.pk }}" {% if form.area_asignada.value == area.pk %}selected{% endif %}>{{ area.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Mínimo (%)</label>
+                <input type="number" name="minimo_porcentaje" value="{{ form.minimo_porcentaje.value|default:0 }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Procesos asignados</label>
+                <select multiple name="procesos_asignados" class="w-full border rounded-xl p-3" size="5">
+                    {% for proceso in form.procesos_asignados.field.queryset %}
+                    <option value="{{ proceso.pk }}" {% if proceso.pk in form.procesos_asignados.value %}selected{% endif %}>{{ proceso.nombre }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="grid grid-cols-2 gap-4">
+                <label><input type="checkbox" name="puede_gestionar_staff" {% if form.puede_gestionar_staff.value %}checked{% endif %}> Gestionar Staff</label>
+                <label><input type="checkbox" name="puede_gestionar_areas" {% if form.puede_gestionar_areas.value %}checked{% endif %}> Gestionar Áreas</label>
+                <label><input type="checkbox" name="puede_gestionar_procesos" {% if form.puede_gestionar_procesos.value %}checked{% endif %}> Gestionar Procesos</label>
+                <label><input type="checkbox" name="puede_gestionar_pasos" {% if form.puede_gestionar_pasos.value %}checked{% endif %}> Gestionar Pasos</label>
+                <label><input type="checkbox" name="puede_supervisar" {% if form.puede_supervisar.value %}checked{% endif %}> Puede Supervisar</label>
+            </div>
+        </div>
+
+        <!-- TAB EQUIPO A CARGO -->
+        <div id="content-equipo" class="tab-content hidden space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Usuarios a cargo</label>
+                <select multiple name="equipo_a_cargo" class="w-full border rounded-xl p-3" size="8">
+                    {% for staff in form.equipo_a_cargo.field.queryset %}
+                    <option value="{{ staff.pk }}" {% if staff.pk in form.equipo_a_cargo.value %}selected{% endif %}>
+                        {{ staff.user.get_full_name|default:staff.user.username }} ({{ staff.get_rol_display }})
+                    </option>
+                    {% endfor %}
+                </select>
+                <p class="text-xs text-gray-400 mt-1">Selecciona los usuarios que estarán a tu cargo (solo para roles Administrador, Supervisor o Auditor).</p>
+            </div>
+        </div>
+
+        <!-- BOTONES -->
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'staff_dashboard' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}

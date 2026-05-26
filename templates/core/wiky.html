@@ -1,0 +1,43 @@
+{% extends 'base.html' %}
+{% block title_page %}Wiky Operativa{% endblock %}
+{% block breadcrumb %}Directorio Automático{% endblock %}
+
+{% block content %}
+<div class="max-w-5xl mx-auto bg-white p-10 rounded-[3rem] border shadow-sm">
+    <div class="mb-6">
+        <h2 class="text-3xl font-black text-gray-800">Wiky Operativa</h2>
+        <p class="text-xs text-gray-400 uppercase font-bold tracking-widest mt-1">Estructura de flujos por área y proceso</p>
+    </div>
+    <div class="mb-6">
+        <form method="get" class="flex gap-4 flex-wrap">
+            <input type="text" name="area" placeholder="Filtrar por área" value="{{ request.GET.area }}" class="border rounded p-2">
+            <input type="text" name="proceso" placeholder="Filtrar por proceso" value="{{ request.GET.proceso }}" class="border rounded p-2">
+            <button type="submit" class="bg-black text-white px-4 py-2 rounded">Filtrar</button>
+            <a href="{% url 'wiky' %}" class="bg-gray-300 px-4 py-2 rounded">Limpiar</a>
+        </form>
+    </div>
+    {% for area in areas %}
+    <div class="mb-8 border-l-4 border-secondary pl-6">
+        <h3 class="font-bold text-gray-800 uppercase tracking-tighter">{{ area.nombre }}</h3>
+        <div class="mt-4 space-y-3">
+            {% for proceso in area.procesos.all %}
+            <div class="bg-gray-50 p-3 rounded-lg">
+                <div class="font-semibold text-gray-700">📌 {{ proceso.nombre }}</div>
+                <ul class="ml-6 mt-2 space-y-1">
+                    {% for paso in proceso.pasos.all %}
+                    <li class="text-sm text-gray-500">• {{ paso.orden }}. {{ paso.nombre }} {% if paso.tipo == 'condicional' %}<span class="text-xs bg-yellow-100 px-1 rounded">condicional</span>{% endif %}</li>
+                    {% empty %}
+                    <li class="text-sm text-gray-400 italic">Sin pasos definidos</li>
+                    {% endfor %}
+                </ul>
+            </div>
+            {% empty %}
+            <p class="text-xs text-gray-400 italic">No hay procesos en esta área.</p>
+            {% endfor %}
+        </div>
+    </div>
+    {% empty %}
+    <p class="text-gray-400 text-center py-10">No hay áreas registradas.</p>
+    {% endfor %}
+</div>
+{% endblock %}

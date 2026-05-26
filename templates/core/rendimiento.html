@@ -1,0 +1,55 @@
+{% extends 'base.html' %}
+{% block title_page %}Mi Rendimiento{% endblock %}
+{% block breadcrumb %}Rendimiento{% endblock %}
+
+{% block content %}
+<div class="bg-white rounded-2xl border shadow-sm overflow-hidden">
+    <div class="p-6 border-b bg-gray-50 font-bold">Procesos ejecutados</div>
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200">
+            <thead class="bg-gray-50">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Proceso</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Inicio</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Estado</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Cumplimiento</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Acciones</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white divide-y divide-gray-200">
+                {% for ejec in ejecuciones %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{{ ejec.proceso.nombre }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{{ ejec.fecha_inicio|date:"d/m/Y H:i" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap">
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
+                            {% if ejec.estado == 'completado' %}bg-green-100 text-green-800
+                            {% elif ejec.estado == 'en_progreso' %}bg-yellow-100 text-yellow-800
+                            {% else %}bg-gray-100 text-gray-800{% endif %}">
+                            {{ ejec.get_estado_display }}
+                        </span>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                        <div class="flex items-center gap-2">
+                            <div class="w-24 bg-gray-200 rounded-full h-2">
+                                <div class="bg-secondary h-2 rounded-full" style="width: {{ ejec.calcular_cumplimiento }}%"></div>
+                            </div>
+                            <span>{{ ejec.calcular_cumplimiento }}%</span>
+                        </div>
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 flex gap-2">
+                        {% if ejec.estado == 'en_progreso' %}
+                            <a href="{% url 'ejecutar_proceso' ejec.proceso.pk %}" class="bg-blue-500 text-white px-3 py-1 rounded text-xs hover:bg-blue-600">Continuar</a>
+                        {% endif %}
+                        <a href="{% url 'detalle_mi_rendimiento' ejec.pk %}" class="bg-secondary px-3 py-1 rounded text-xs hover:bg-secondaryHover">Ver detalle</a>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5" class="px-6 py-10 text-center text-gray-400">No hay ejecuciones registradas aún.</td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% include 'pagination.html' with page=ejecuciones %}
+</div>
+{% endblock %}

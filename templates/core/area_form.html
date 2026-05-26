@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title_page %}{{ titulo }}{% endblock %}
+{% block content %}
+<div class="max-w-xl mx-auto bg-white p-8 rounded-2xl border shadow-sm">
+    <form method="post">
+        {% csrf_token %}
+        <div class="space-y-4">
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Nombre del área</label>
+                <input type="text" name="nombre" value="{{ form.nombre.value|default:'' }}" class="w-full border rounded-xl p-3">
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Descripción</label>
+                <textarea name="descripcion" class="w-full border rounded-xl p-3">{{ form.descripcion.value|default:'' }}</textarea>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Responsable</label>
+                <select name="responsable" class="w-full border rounded-xl p-3 bg-white">
+                    <option value="">---------</option>
+                    {% for staff in form.responsable.field.queryset %}
+                    <option value="{{ staff.pk }}" {% if form.responsable.value == staff.pk %}selected{% endif %}>{{ staff.user.get_full_name|default:staff.user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div>
+                <label class="text-xs font-bold text-gray-400 uppercase">Mínimo requerido (%)</label>
+                <input type="number" name="minimo_requerido" value="{{ form.minimo_requerido.value|default:0 }}" class="w-full border rounded-xl p-3">
+            </div>
+        </div>
+        <div class="mt-8 flex justify-end gap-3">
+            <a href="{% url 'area_dashboard' %}" class="text-gray-400 font-bold">Cancelar</a>
+            <button type="submit" class="bg-secondary px-8 py-2 rounded-xl font-bold">Guardar</button>
+        </div>
+    </form>
+</div>
+{% endblock %}
